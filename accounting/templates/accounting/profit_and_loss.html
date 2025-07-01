@@ -1,0 +1,87 @@
+{%extends 'base.html'%}
+{% load humanize %}
+{% block pagetitle %} P&L Statement {% endblock %}
+{% block home %} {% url 'trial_balance_view' %} {% endblock %}
+{% block title %} P&L statement {% endblock %}
+{% block content %}
+{% include 'components/title_bar.html' with title=' P&L Statement'  %}
+
+<style>
+    td{
+        letter-spacing: 1px;
+    }
+</style>
+
+<a href="{% url 'export_profit_and_loss' %}?fromDate={{request.GET.fromDate}}&toDate={{request.GET.toDate}}&option={{request.GET.option}}" class="btn btn-primary">Export</a>
+
+
+<div class="card">
+    {% include 'components/search_filter.html' %}
+    <div class="card-body pt-0">
+        <div class="card-header p-4">
+            <center class="m-auto">
+                    {% if org_global %}
+                    <h2>{{org_global.org_name}}</h2> <br>
+                    {% endif %}
+                    <h2>Profit and Loss Statement</h2> <br>
+                    <p>Date: ________________</p>
+            </center>
+        </div>
+        <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+            <div class="table-responsive">
+                <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer"
+                    id="kt_customers_table">
+                    <thead class="bg-secondary">
+                        <th class="col-7">Income</th>
+                        <th>Amount</th>
+                        <th>Amount</th>
+                    </thead>
+                    <tbody class="fw-bolder text-gray-600">
+                        {% for revenue in revenues %}
+                        <tr>
+                            <td>{{revenue.title}}</td>
+                            <td>{{revenue.amount|intcomma}}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td></td>
+                            <td>{{revenue_total|intcomma}}</td>
+                            <td>{{revenue_total|intcomma}}</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+
+                <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer"
+                    id="kt_customers_table">
+                    <thead class="bg-secondary">
+                        <th class="col-7">Expenses</th>
+                        <th>Amount</th>
+                        <th>Amount</th>
+                    </thead>
+                    <tbody class="fw-bolder text-gray-600">
+                        {% for expense in expenses %}
+                        <tr>
+                            <td>{{expense.title}}</td>
+                            <td>{{expense.amount|intcomma}}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td></td>
+                            <td>{{expense_total|intcomma}}</td>
+                            <td>{{expense_total|intcomma}}</td>
+                        </tr>
+                    </tbody>
+                </table
+            </div>
+            {%if object_list%}
+            {% include 'pagination.html' %}
+            {%endif%}
+        </div>
+    </div>
+</div>
+
+<script>
+</script>
+
+{% endblock %}

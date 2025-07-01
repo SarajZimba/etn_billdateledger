@@ -1,0 +1,49 @@
+{%extends 'base.html'%} {%load static%} {%block title%} Update {%endblock%}
+{%block content %}
+{% include 'components/title_bar.html' with title="Update" back="true" %}
+
+<div class="card p-2">
+
+  <form class="p-4" enctype="multipart/form-data" method="POST">
+<div class="row">
+
+     {% for field in form.visible_fields %}
+
+         {% if field.field.widget.input_type == "text" or field.field.widget.input_type == "number" or field.field.widget.input_type == "datetime-local" or field.field.widget.input_type == "url" or field.field.widget.input_type == "email" or field.field.widget.input_type == "date" %}
+         <div class="col-md-6 fv-row fv-plugins-icon-container">
+
+         {% elif field.field.widget.input_type == "textarea" or field.field.widget.input_type == "checkbox" %}
+                <div class="col-md-12 fv-row fv-plugins-icon-container">
+          {% else %}
+                  <div>
+          {% endif %}
+            <p class="form-group">
+                  {% if field.field.widget.input_type == "checkbox" %}
+                  <label class="form-check form-switch form-check-custom form-check-solid">
+                        {{field}}
+                      <span class="form-check-label fw-bold text-muted" for="kt_modal_add_customer_billing">
+                        {{field.label}}
+                      </span>
+                    </label>
+                  {% else %}
+                  <label for="{{field.auto_id}}">{{field.label}}</label>
+                  {{field}}
+                  <div class="fv-plugins-message-container invalid-feedback"><div data-field="daterangepicker_input"> {{field.errors}} </div></div>
+                  {% endif %}
+                  </p>
+                  </div>
+                    {% endfor %}
+
+
+    {% csrf_token %}
+
+    </div>
+
+    <input type="submit" value="Submit" class="btn btn-primary mt-2" id="create-btn"></input>
+  </form>
+
+</div>
+
+
+{% comment %} {% include 'select2.html' %} {% endcomment %}
+{% endblock %}

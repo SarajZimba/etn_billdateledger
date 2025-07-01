@@ -1,0 +1,92 @@
+{%extends 'base.html'%}
+{% block pagetitle %} {{object.title}} {% endblock %}
+{% block home %}{% url 'blog:blog_list' %}{% endblock %}
+{% block title %}  Blog Detail {% endblock %}
+{% block content %}
+<div class="card">
+   <!--begin::Body-->
+   <div class="card-body p-lg-20 pb-lg-0">
+      <!--begin::Layout-->
+      <div class="d-flex flex-column flex-xl-row">
+         <!--begin::Content-->
+         <div class="flex-lg-row-fluid me-xl-15">
+            <!--begin::Post content-->
+            <div class="mb-17">
+               <!--begin::Wrapper-->
+               <div class="mb-8">
+                  <!--begin::Info-->
+                  <div class="d-flex flex-wrap mb-6">
+                     <!--begin::Item-->
+                     <div class="me-9 my-1">
+                        <!--begin::Icon-->
+                        <!--begin::Svg Icon | path: icons/duotune/general/gen025.svg-->
+                        <span class="svg-icon svg-icon-primary svg-icon-2 me-1">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                              <rect x="2" y="2" width="9" height="9" rx="2" fill="black"></rect>
+                              <rect opacity="0.3" x="13" y="2" width="9" height="9" rx="2" fill="black"></rect>
+                              <rect opacity="0.3" x="13" y="13" width="9" height="9" rx="2" fill="black"></rect>
+                              <rect opacity="0.3" x="2" y="13" width="9" height="9" rx="2" fill="black"></rect>
+                           </svg>
+                        </span>
+                        <!--end::Svg Icon-->
+                        <!--end::Icon-->
+                        <!--begin::Label-->
+                        <span class="fw-bolder text-gray-400">{{object.created_at}}</span>
+                        <!--end::Label-->
+                     </div>
+                     <!--end::Item-->
+                  </div>
+                  <!--end::Info-->
+                  <!--begin::Title-->
+                  <a href="#" class="text-dark text-hover-primary fs-2 fw-bolder">
+                  {{object.title}}
+                  <span class="fw-bolder text-muted fs-5 ps-1">{{object.author}}</span></a>
+                  <!--end::Title-->
+                  <!--begin::Container-->
+                  {% if object.featured_image %}
+                  <div class="overlay mt-8">
+                     <!--begin::Image-->
+                     <div class="bgi-no-repeat bgi-position-center bgi-size-cover card-rounded min-h-350px" style="background-image:url('{{object.featured_image.url}}')"></div>
+                     <!--end::Image-->
+                     <!--begin::Links-->
+                     <!--end::Links-->
+                  </div>
+                  {% endif %}
+                  <!--end::Container-->
+               </div>
+               <!--end::Wrapper-->
+               <!--begin::Description-->
+               <div class="fs-5 fw-bold text-gray-600">
+                  {{object.content|safe}}
+               </div>
+               <!--end::Description-->
+            </div>
+            <!--end::Post content-->
+         </div>
+         <!--end::Content-->
+         <!--begin::Sidebar-->
+         <div class="flex-column flex-lg-row-auto w-100 w-xl-300px mb-10">
+            <!--begin::Search blog-->
+            <!--end::Search blog-->
+            <!--begin::Catigories-->
+            <div class="mb-16">
+               <h4 class="text-black mb-7">Categories</h4>
+               <!--begin::Item-->
+               <div class="d-flex flex-stack fw-bold fs-5 text-muted mb-4">
+                  <!--begin::Text-->
+                  <a href="#" class="text-muted text-hover-primary pe-2">{{object.category}}</a>
+                  <!--end::Text-->
+                  <!--begin::Number-->
+                  <!--end::Number-->
+               </div>
+               <!--begin::Item-->
+            </div>
+            <!--end::Catigories-->
+         </div>
+         <!--end::Sidebar-->
+      </div>
+      <!--end::Layout-->
+   </div>
+   <!--end::Body-->
+</div>
+{%endblock%}

@@ -1,0 +1,80 @@
+{%extends 'base.html'%}
+{% load tags %}
+{% block pagetitle %}SalesEntry List {% endblock %}
+{% block home %} {% url 'tblsalesentry_list' %} {% endblock %}
+{% block title %}SalesEntry List {% endblock %}
+{% block content %}
+{% include 'components/title_bar.html' with title=' Sales Entry List '  %}
+<div class="card">
+   {% include 'components/search_filter.html' with  search_title="Search SalesEntry" %} 
+   <form method="post" enctype="multipart/form-data" action="{% url 'sales_upload' %}">
+      {% csrf_token %}
+      <input type="file" name="file" accept=".xlsx,.xls" required>
+      <button type="submit">Upload</button>
+   </form>
+   <div class="card-body pt-0">
+      <!--begin::Table-->
+      <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+         <div class="table-responsive">
+            <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_customers_table">
+               <!--begin::Table head-->
+               {%if sales_entry%}
+               <thead>
+                  <!--begin::Table row-->
+                  <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+                     <th class="min-w-10px sorting" tabindex="0" > BID</th>
+                     <th class="min-w-125px sorting" tabindex="0" >Miti</th>
+                     <th class="min-w-50px sorting" tabindex="0" > Bill Date</th>
+                     <th class="min-w-125px sorting" tabindex="0" > Bill No</th>
+                     <th class="min-w-100px sorting" tabindex="0" > C.Name</th>
+                     <th class="min-w-100px sorting" tabindex="0" > C.PAN</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Amount</th>
+                     <th class="min-w-50px sorting" tabindex="0" >N.Tax Sales</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Zero Tax Sales</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Taxable Amount</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Excise Duty Amount</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Tax Amount</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Serviced Item</th>
+                     <th class="min-w-20px sorting" tabindex="0" >Quantity</th>
+                  </tr>
+                  <!--end::Table row-->
+               </thead>
+               {%endif%}
+               <tbody class="fw-bold text-gray-600">
+                  {% for object in sales_entry %}
+                  <tr class="odd" id="obj-{{object.pk}}">
+                     <td>{{object.tblSalesEntry}}</td>
+                     <td>{{object.miti|replace_dash_with_dot}}</td>
+                     <td>{{object.bill_date}}</td>
+                     <td>{{object.bill_no}}</td>
+                     <td>{{object.customer_name}}</td>
+                     <td>{{object.customer_pan}}</td>
+                     <td>{{object.amount}}</td>
+                     <td>{{object.NoTaxSales}}</td>
+                     <td>{{object.ZeroTaxSales}}</td>
+                     <td>{{object.taxable_amount}}</td>
+                     <td>{{object.excise_duty_amount}}</td>
+                     <td>{{object.tax_amount}}</td>
+                     <td>{{object.ServicedItem}}</td>
+                     <td>{{object.quantity}}</td>
+                  </tr>
+                  {%empty%}
+                  {% include 'components/empty.html' with  title="TblSalesEntry" url="tablreturnentry_create" %}
+                  {% endfor %}
+                  {% if sales_entry %}
+                  {% include 'components/total_sales.html' %}
+                  {% endif %}
+               </tbody>
+               <!--end::Table body-->
+            </table>
+         </div>
+         {% comment %} {%if sales_entry%}
+         {% include 'pagination.html' %}
+         {%endif%} {% endcomment %}
+      </div>
+      <!--end::Table-->
+   </div>
+   <!--end::Card body-->
+</div>
+<script></script>
+{% endblock %}

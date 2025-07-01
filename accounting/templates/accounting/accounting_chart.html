@@ -1,0 +1,676 @@
+{%extends 'base.html'%}
+{% block pagetitle %}Accounting Chart {% endblock %}
+{% block home %} {% url 'customer_list' %} {% endblock %}
+{% block title %}Accounting Chart {% endblock %}
+{% block content %}
+<style>
+  .card {
+    margin: 10px;
+    padding: 0;
+    border: 2px solid rgb(38, 73, 200);
+    box-shadow: 10px 10px 10px rgb(164, 155, 155);
+    border-radius: 2%;
+
+  }
+
+  .card:hover {
+    border: 2px solid rgb(3, 132, 3);
+    box-shadow: 16px 16px 16px rgb(171, 235, 171);
+  }
+
+  ul {
+    line-height: 250%;
+
+  }
+
+  .ledger-ul {
+    font-size: 120%;
+  }
+  .subledger-ul{
+    border-radius: 3%;
+    background-color: rgb(233, 237, 240);
+    border: 1px solid rgb(131, 126, 126);
+  }
+  .subledger-ul li {
+    list-style-type: none;
+  }
+  
+  [contenteditable] {
+  padding: 10px;
+  }
+  
+
+</style>
+
+{% include 'components/title_bar.html' with title=' Chart of Acounts' end="a" %}
+
+<div class="row">
+
+  <div class="col-xs-12 col-sm-12 col-md-6 col-lg-4">
+    <div class="card">
+      <div class="card-body" id="droppable-Asset" ondragover="dragover_handler(event)"
+        ondrop="drop_handler(event, this)">
+        <div class="text-center">
+          <h3>Asset</h3>
+          <a href="{% url 'accountchart_create' %}?accountType=Asset"><button
+              class="btn btn-success btn-sm">Create</button></a>
+          <button type="button" class="btn btn-info btn-sm" onclick="showDetails('droppable-Asset')">Details</button>
+        </div>
+        <hr>
+        <ul class="ledger-ul">
+          {% for asset in assets %}
+          <div draggable="true" id="{{asset.pk}}" ondragstart="drag(event)">
+            <li class="fw-bolder">
+              <span ondblclick="handleDblClick(this)" onblur="groupUpdate(this)" id={{asset.pk}} data-is-editable="{{asset.is_editable}}">
+                {{asset}}
+              </span>
+              <a href="{% url 'accountledger_create' %}?ledgerType={{asset}}" class="fas fa-plus"></a>
+            </li>
+            <ul>
+              {% with sundry_debtors_shown=False %}
+              {% for ledger in asset.accountledger_set.all %}
+              {% if ledger.account_chart.group != 'Sundry Debtors' %}
+              <li>
+                
+                <span ondblclick="handleDblClick(this)" onblur="ledgerUpdate(this)" id={{ledger.pk}} data-is-editable="{{ledger.is_editable}}">
+                
+                {{ledger}}
+              </span>
+             
+                <a href="{% url 'subledger_create' %}?ledgerType={{ledger}}" class="bi bi-plus fa-lg"></a>
+                <small class="fw-bolder d-none"><u><a href="{% url 'accountledger_update' ledger.pk  %}">{{ledger.total_value}}</a> </u></small>
+                
+                {% endif %}
+                {% if ledger.account_chart.group == 'Sundry Debtors' and not sundry_debtors_shown %}
+                    <small class="fw-bolder d-none "><u class="debtors_total"><a href="{% url 'accountledger_update' ledger.pk  %}">{{sundry_debtors_total}}</a> </u></small>
+                <!-- <small class="fw-bolder d-none"><u><a href="{% url 'accountledger_update' ledger.pk  %}">{{ledger.total_value}}</a> </u></small> -->
+                    
+                    {% with sundry_debtors_shown=True %}{% endwith %}
+               
+                
+                {% endif %}
+                
+
+                {% if ledger.accountsubledger_set.count > 0 %}
+                <ul class="subledger-ul d-none">
+                  {% for sub in ledger.accountsubledger_set.all %}
+                  <li>
+                    <i class="bi bi-arrow-return-right text-dark fa-lg"></i>
+                    <span ondblclick="handleDblClick(this)" onblur="subLedgerUpdate(this)" id={{sub.pk}} data-is-editable="{{sub.is_editable}}">{{sub}}</span>
+                    <span class="fw-bold"><a href="{% url 'subledger_update' sub.pk  %}">({{sub.total_value}})</a></span>
+                  </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </li>
+              {% endfor %}
+              {% endwith %}
+            </ul>
+          </div>
+
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xs-12 col-sm-12 col-md-6 col-lg-4 d-flex">
+    <div class="card w-100">
+      <div class="card-body" id="droppable-Liability" ondragover="dragover_handler(event)"
+        ondrop="drop_handler(event, this)">
+        <div class="text-center">
+          <h3>Liability</h3>
+          <a href="{% url 'accountchart_create' %}?accountType=Liability"><button
+              class="btn btn-success btn-sm">Create</button></a>
+          <button class="btn btn-info btn-sm"  onclick="showDetails('droppable-Liability')">Details</button>
+        </div>
+        <hr>
+        <ul class="ledger-ul">
+          {% for liability in liabilities %}
+          <div draggable="true" id="{{liability.pk}}" ondragstart="drag(event)">
+            <li class="fw-bolder">
+              <span ondblclick="handleDblClick(this)" onblur="groupUpdate(this)" id={{liability.pk}} data-is-editable="{{liability.is_editable}}">
+                {{liability}} 
+              </span>
+              <a href="{% url 'accountledger_create' %}?ledgerType={{liability}}"
+                class="fa fa-plus"></a> </li>
+            <ul>
+              {% for ledger in liability.accountledger_set.all %}
+              {% if ledger.account_chart.group != 'Sundry Creditors'%}
+
+              <li>
+                <span ondblclick="handleDblClick(this)" onblur="ledgerUpdate(this)" id={{ledger.pk}} data-is-editable="{{ledger.is_editable}}"
+                title="{{ledger.total_value}}">{{ledger}}</span>
+                <a href="{% url 'subledger_create' %}?ledgerType={{ledger}}" class="bi bi-plus fa-lg"></a>
+                <small class="fw-bolder d-none"><u><a href="{% url 'accountledger_update' ledger.pk  %}">{{ledger.total_value}}</a> </u></small>
+              </li> 
+              {% endif %} 
+
+
+
+              {% if ledger.account_chart.group == 'Sundry Creditors' and not sundry_debtors_shown %} 
+              <small class="fw-bolder d-none "><u class="creditors_total"><a href="{% url 'accountledger_update' ledger.pk  %}">{{sundry_creditors_total}}</a> </u></small>
+          <!-- <small class="fw-bolder d-none"><u><a href="{% url 'accountledger_update' ledger.pk  %}">{{ledger.total_value}}</a> </u></small> -->
+              
+              {% with sundry_debtors_shown=True %}{% endwith %}
+         
+          
+            {% endif %}
+              
+              
+                {% if ledger.accountsubledger_set.count > 0 %}
+                <ul class="subledger-ul d-none">
+                  {% for sub in ledger.accountsubledger_set.all %}
+                  <li>
+                    <i class="bi bi-arrow-return-right text-dark fa-lg"></i>
+                    <span ondblclick="handleDblClick(this)" onblur="subLedgerUpdate(this)" id={{sub.pk}} data-is-editable="{{sub.is_editable}}">{{sub}}</span>
+                    <span class="fw-bold"><a href="{% url 'subledger_update' sub.pk  %}">({{sub.total_value}})</a></span>
+                  </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-xs-12 col-sm-12 col-md-6 col-lg-4 d-flex">
+    <div class="card w-100">
+      <div class="card-body" id="droppable-Equity" ondragover="dragover_handler(event)"
+        ondrop="drop_handler(event, this)">
+        <div class="text-center">
+          <h3>Equity</h3>
+          <a href="{% url 'accountchart_create' %}?accountType=Equity"><button
+              class="btn btn-success btn-sm">Create</button></a>
+          <button class="btn btn-info btn-sm" onclick="showDetails('droppable-Equity')">Details</button>
+        </div>
+        <hr>
+        <ul class="ledger-ul">
+          {% for equity in equities %}
+          <div draggable="true" id="{{equity.pk}}" ondragstart="drag(event)">
+            <li class="fw-bolder">
+              <span ondblclick="handleDblClick(this)" onblur="groupUpdate(this)" id={{equity.pk}} data-is-editable="{{equity.is_editable}}">
+                {{equity}}
+              </span>
+              <a href="{% url 'accountledger_create' %}?ledgerType={{equity}}" class="fa fa-plus"></a>
+            </li>
+            <ul>
+              {% for ledger in equity.accountledger_set.all %}
+              <li>
+                <span ondblclick="handleDblClick(this)" onblur="ledgerUpdate(this)" id={{ledger.pk}} data-is-editable="{{ledger.is_editable}}"
+                title="{{ledger.total_value}}">
+                  {{ledger}}
+                </span>
+                <a href="{% url 'subledger_create' %}?ledgerType={{ledger}}" class="bi bi-plus fa-lg"></a>
+              </li>
+              <small class="fw-bolder d-none"><u><a href="{% url 'accountledger_update' ledger.pk  %}">{{ledger.total_value}}</a> </u></small>
+                {% if ledger.accountsubledger_set.count > 0 %}
+                <ul class="subledger-ul d-none">
+                  {% for sub in ledger.accountsubledger_set.all %}
+                  <li>
+                    <i class="bi bi-arrow-return-right text-dark fa-lg"></i>
+                    <span ondblclick="handleDblClick(this)" onblur="subLedgerUpdate(this)" id={{sub.pk}} data-is-editable="{{sub.is_editable}}">{{sub}}</span>
+                    <span class="fw-bold"><a href="{% url 'subledger_update' sub.pk  %}">({{sub.total_value}})</a></span>
+                  </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xs-12 col-sm-12 col-md-6 col-lg-4 d-flex">
+    <div class="card w-100">
+      <div class="card-body" id="droppable-Revenue" ondragover="dragover_handler(event)"
+        ondrop="drop_handler(event, this)">
+        <div class="text-center">
+          <h3>Revenue</h3>
+          <a href="{% url 'accountchart_create' %}?accountType=Revenue"><button
+              class="btn btn-success btn-sm">Create</button></a>
+          <button class="btn btn-info btn-sm"  onclick="showDetails('droppable-Revenue')">Details</button>
+        </div>
+        <hr>
+        <ul class="ledger-ul">
+          {% for revenue in revenues %}
+          <div draggable="true" id="{{revenue.pk}}" ondragstart="drag(event)">
+            <li class="fw-bolder">
+              <span ondblclick="handleDblClick(this)" onblur="groupUpdate(this)" id={{revenue.pk}} data-is-editable="{{revenue.is_editable}}">
+                {{revenue}}
+              </span>
+              <a href="{% url 'accountledger_create' %}?ledgerType={{revenue}}"
+                class="fa fa-plus"></a>
+            </li>
+            <ul>
+              {% for ledger in revenue.accountledger_set.all %}
+              <li>
+                <span ondblclick="handleDblClick(this)" onblur="ledgerUpdate(this)" id={{ledger.pk}} data-is-editable="{{ledger.is_editable}}"
+                title="{{ledger.total_value}}">{{ledger}}</span>
+                <a href="{% url 'subledger_create' %}?ledgerType={{ledger}}" class="bi bi-plus fa-lg"></a>
+              </li>
+              <small class="fw-bolder d-none"><u><a href="{% url 'accountledger_update' ledger.pk  %}">{{ledger.total_value}}</a> </u></small>
+                {% if ledger.accountsubledger_set.count > 0 %}
+                <ul class="subledger-ul d-none">
+                  {% for sub in ledger.accountsubledger_set.all %}
+                  <li>
+                    <i class="bi bi-arrow-return-right text-dark fa-lg"></i>
+                    <span ondblclick="handleDblClick(this)" onblur="subLedgerUpdate(this)" id={{sub.pk}} data-is-editable="{{sub.is_editable}}">{{sub}}</span>
+                    <span class="fw-bold"><a href="{% url 'subledger_update' sub.pk  %}">({{sub.total_value}})</a></span>
+                  </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xs-12 col-sm-12 col-md-6 col-lg-4 d-flex">
+    <div class="card w-100">
+      <div class="card-body" id="droppable-Expense" ondragover="dragover_handler(event)"
+        ondrop="drop_handler(event, this)">
+        <div class="text-center">
+          <h3>Expense</h3>
+          <a href="{% url 'accountchart_create' %}?accountType=Expense"><button
+              class="btn btn-success btn-sm">Create</button></a>
+          <button class="btn btn-info btn-sm" onclick="showDetails('droppable-Expense')">Details</button>
+        </div>
+        <hr>
+
+        <ul class="ledger-ul">
+          {% for expense in expenses %}
+          <div draggable="true" id="{{expense.pk}}" ondragstart="drag(event)">
+            <li class="fw-bolder">
+              <span ondblclick="handleDblClick(this)" onblur="groupUpdate(this)" id={{expense.pk}} data-is-editable="{{expense.is_editable}}">
+                {{expense}}
+              </span>
+              <a href="{% url 'accountledger_create' %}?ledgerType={{expense}}"
+                class="fa fa-plus"></a>
+            </li>
+            <ul>
+              {% for ledger in expense.accountledger_set.all %}
+              <li>
+                <span ondblclick="handleDblClick(this)" onblur="ledgerUpdate(this)" id={{ledger.pk}} data-is-editable="{{ledger.is_editable}}"
+                title="{{ledger.total_value}}">{{ledger}}</span>
+                <a href="{% url 'subledger_create' %}?ledgerType={{ledger}}" class="bi bi-plus fa-lg"></a>
+              </li>
+              <small class="fw-bolder d-none"><u><a href="{% url 'accountledger_update' ledger.pk  %}">{{ledger.total_value}}</a> </u></small>
+                {% if ledger.accountsubledger_set.count > 0 %}
+                <ul class="subledger-ul d-none">
+                  {% for sub in ledger.accountsubledger_set.all %}
+                  <li>
+                    <i class="bi bi-arrow-return-right text-dark fa-lg"></i>
+                    <span ondblclick="handleDblClick(this)" onblur="subLedgerUpdate(this)" id={{sub.pk}} data-is-editable="{{sub.is_editable}}">{{sub}}</span>
+                    <span class="fw-bold"><a href="{% url 'subledger_update' sub.pk  %}">({{sub.total_value}})</a></span>
+                  </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+        </ul>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xs-12 col-sm-12 col-md-6 col-lg-4 d-flex">
+    <div class="card w-100">
+      <div class="card-body" id="droppable-Other" ondragover="dragover_handler(event)"
+        ondrop="drop_handler(event, this)">
+        <div class="text-center">
+          <h3>Other</h3>
+          <a href="{% url 'accountchart_create' %}?accountType=Other"><button
+              class="btn btn-success btn-sm">Create</button></a>
+          <button class="btn btn-info btn-sm" onclick="showDetails('droppable-Other')">Details</button>
+        </div>
+        <hr>
+        <ul class="ledger-ul">
+          {% for other in others %}
+          <div draggable="true" id="{{other.pk}}" ondragstart="drag(event)">
+            <li class="fw-bolder">
+              <span ondblclick="handleDblClick(this)" onblur="groupUpdate(this)" id={{other.pk}} data-is-editable="{{other.is_editable}}">
+                {{other}}
+              </span>
+              <a href="{% url 'accountledger_create' %}?ledgerType={{other}}" class="fa fa-plus"></a>
+            </li>
+            <ul>
+              {% for ledger in other.accountledger_set.all %}
+              <li>
+                <span ondblclick="handleDblClick(this)" onblur="ledgerUpdate(this)" id={{ledger.pk}} data-is-editable="{{ledger.is_editable}}"
+                title="{{ledger.total_value}}">
+                  {{ledger}}
+                </span>
+                <a href="{% url 'subledger_create' %}?ledgerType={{ledger}}" class="bi bi-plus fa-lg"></a>
+              </li>
+              <small class="fw-bolder d-none"><u><a href="{% url 'accountledger_update' ledger.pk  %}">{{ledger.total_value}}</a> </u></small>
+                {% if ledger.accountsubledger_set.count > 0 %}
+                <ul class="subledger-ul d-none">
+                  {% for sub in ledger.accountsubledger_set.all %}
+                  <li>
+                    <i class="bi bi-arrow-return-right text-dark fa-lg"></i>
+                    <span ondblclick="handleDblClick(this)" onblur="subLedgerUpdate(this)" id={{sub.pk}} data-is-editable="{{sub.is_editable}}">{{sub}}</span>
+                    <span class="fw-bold"><a href="{% url 'subledger_update' sub.pk  %}">({{sub.total_value}})</a></span>
+                  </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let editable = document.querySelectorAll('[data-is-editable=True]')
+    for(let i of editable){
+      i.style.cursor="pointer"
+    }
+  </script>
+
+  <script>
+
+    function showDetails(cardId) {
+      let card = document.getElementById(cardId)
+      let items = card.getElementsByTagName('small')
+      let subledgerArray = card.getElementsByClassName('subledger-ul')
+
+      let totalElements = card.getElementsByClassName('debtors_total');
+      let ctotalElements = card.getElementsByClassName('creditors_total');
+
+for (let i = 0; i < ctotalElements.length; i++) {
+    if (i === 0) {
+        ctotalElements[i].classList.remove('d-none');
+        ctotalElements[i].classList.add('d-block');
+    } else {
+        ctotalElements[i].classList.remove('d-block');
+        ctotalElements[i].classList.add('d-none');
+    }
+}
+
+
+
+    for (let i = 0; i < totalElements.length; i++) {
+        if (i === 0) {
+            totalElements[i].classList.remove('d-none');
+            totalElements[i].classList.add('d-block');
+        } else {
+            totalElements[i].classList.remove('d-block');
+            totalElements[i].classList.add('d-none');
+        }
+    }
+
+//       let totalElements = card.querySelectorAll('.total');
+
+// let firstTotalElement = null;
+
+// for (let totalElement of totalElements) {
+//     if (firstTotalElement === null) {
+//         firstTotalElement = totalElement;
+//     }
+
+//     if (totalElement.classList.contains('d-none')) {
+//         totalElement.classList.remove('d-none');
+//         totalElement.classList.add('d-block');
+//     } else {
+//         totalElement.classList.remove('d-block');
+//         totalElement.classList.add('d-none');
+//     }
+// }
+
+// Hide all other total elements
+// for (let totalElement of totalElements) {
+//     if (totalElement !== firstTotalElement) {
+//         totalElement.classList.remove('d-block');
+//         totalElement.classList.add('d-none');
+//     }
+// }
+
+
+
+
+
+      for(let item of items){
+        if(item.classList.contains('d-none')){
+          item.classList.remove('d-none')
+          item.classList.add('d-block')
+        }else{
+          item.classList.remove('d-block')
+          item.classList.add('d-none')
+        }
+      }
+      for(let item of subledgerArray){
+        if(item.classList.contains('d-none')){
+          item.classList.remove('d-none')
+          item.classList.add('d-block')
+        }else{
+          item.classList.remove('d-block')
+          item.classList.add('d-none')
+        }
+      }
+    }
+
+
+    function drag(ev) {
+      ev.dataTransfer.setData("text", ev.target.id);
+    }
+
+    function dragover_handler(ev) {
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = "move";
+    }
+
+    function drop_handler(ev, el) {
+      ev.preventDefault();
+      console.log(ev)
+      const data = ev.dataTransfer.getData("text/plain");
+      let uls = el.getElementsByTagName('ul')
+      let ul = uls[0]
+      ul.appendChild(document.getElementById(data));
+      const accountType = el.id.split('-')[1]
+
+      $.ajaxSetup({
+        headers: { "X-CSRFToken": '{{csrf_token}}' }
+      });
+
+      $.ajax({
+        url: `/api/update-account-type/${data}/?accountType=${accountType}`,
+        type: 'PUT',
+        success: function (result) {
+          Swal.fire({
+          position: 'top-end',
+          icon: 'success',
+          title: 'Your work has been saved',
+          showConfirmButton: false,
+          timer: 500
+        })
+        }
+      });
+      location.reload()
+    }
+
+
+    function handleDblClick(e) {
+      console.log(e)
+      if(e.getAttribute('data-is-editable') === "True"){
+        e.setAttribute('contenteditable', true)
+      }else{
+        Swal.fire({
+          title:"You cannot edit this Ledger"
+        })
+      }
+
+    }
+
+    function groupUpdate(e) {
+      e.setAttribute('contenteditable', false)
+      const value = e.innerText
+      const id = parseInt(e.id)
+
+      Swal.fire({
+        title: 'Are you sure?',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        denyButtonText: `Don't save`,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajaxSetup({
+            headers: { "X-CSRFToken": '{{csrf_token}}' }
+          });
+
+          $.ajax({
+            url: `/api/update-account-group/${id}/`,
+            type: 'PUT',
+            data: {
+              content: value.trim()
+            },
+            success: function (result) {
+              Swal.fire({
+              position: 'top-end',
+              icon: 'success',
+              title: 'Your work has been saved',
+              showConfirmButton: false,
+              timer: 1000
+            })
+            }
+          });
+        }
+      })
+
+
+    }
+
+
+    function ledgerUpdate(e) {
+      e.setAttribute('contenteditable', false)
+      const id = parseInt(e.id)
+      const value = e.innerText
+
+      Swal.fire({
+        title: 'Do you want to save the changes?',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        denyButtonText: `Don't save`,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajaxSetup({
+            headers: { "X-CSRFToken": '{{csrf_token}}' }
+          });
+
+          $.ajax({
+            url: `/api/update-account-ledger/${id}/`,
+            type: 'PUT',
+            data: {
+              content: value.trim()
+            },
+            success: function (result) {
+              Swal.fire({
+              position: 'top-end',
+              icon: 'success',
+              title: 'Your work has been saved',
+              showConfirmButton: false,
+              timer: 1000
+            })
+            }
+          });
+        }
+      })
+
+    }
+
+    function subLedgerUpdate(e) {
+      e.setAttribute('contenteditable', false)
+      const id = parseInt(e.id)
+      const value = e.innerText
+
+      Swal.fire({
+        title: 'Do you want to save the changes?',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        denyButtonText: `Don't save`,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajaxSetup({
+            headers: { "X-CSRFToken": '{{csrf_token}}' }
+          });
+
+          $.ajax({
+            url: `/api/update-account-subledger/${id}/`,
+            type: 'PUT',
+            data: {
+              content: value.trim()
+            },
+            success: function (result) {
+              Swal.fire({
+              position: 'top-end',
+              icon: 'success',
+              title: 'Your work has been saved',
+              showConfirmButton: false,
+              timer: 1000
+            })
+            }
+          });
+        }
+      })
+
+    }
+
+
+    let fiscalYearBtn = document.getElementById('fiscal-year-end-btn')
+    if(fiscalYearBtn){
+      fiscalYearBtn.addEventListener('click', (e)=>{
+
+        Swal.fire({
+        title: 'Do you want to update fiscal year?',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'YES',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajaxSetup({
+            headers: { "X-CSRFToken": '{{csrf_token}}' }
+          });
+
+          $.ajax({
+            url: `/end-fiscal-year/`,
+            type: 'POST',
+            success: function (result) {
+              Swal.fire({
+              position: 'top-end',
+              icon: 'success',
+              title: 'Fiscal Year has been updated',
+              showConfirmButton: false,
+              timer: 1500
+            })
+            }
+          });
+        }
+      })
+
+      })
+    }
+
+  </script>
+
+  {% endblock %}

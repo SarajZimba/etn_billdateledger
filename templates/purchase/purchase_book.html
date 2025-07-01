@@ -1,0 +1,140 @@
+{%extends 'base.html'%}
+{% load tags %}
+{% block pagetitle %}Purchase Book {% endblock %}
+{% block home %} {% url 'materialized_view' %} {% endblock %}
+{% block title %}Purchase Book {% endblock %}
+{% block content %}
+{% include 'components/title_bar.html' with title='Purchase Book' subtitle_date="True" %}
+<div class="card">
+    {% include 'components/search_filter.html' with search_title="Search Purchase Book" export_url="purchase_book_list" object_list="true" format="xls" %}
+    <h2>Upload Purchase Entry Excel File</h2>
+
+    <form method="post" enctype="multipart/form-data" action="{% url 'upload_purchase_entry' %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="file">Select Excel File:</label>
+            <input type="file" name="file" id="file" accept=".xlsx" required class="form-control">
+        </div>
+        <br>
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+    <div class="card-body pt-0">
+        <!--begin::Table-->
+        <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+            {% include 'components/org_header.html' with name="Purchase Book" %}
+
+            <div class="d-flex justify-content-between">
+                <h1>Purchase Entry</h1>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer"
+                    id="kt_customers_table">
+                    <!--begin::Table head-->
+
+                    <thead>
+                        <!--begin::Table row-->
+                        <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+                            <th class="min-w-10px sorting" tabindex="0"> Entry ID</th>
+                            <th class="min-w-20px sorting" tabindex="0">Bill Date</th>
+                            <th class="min-w-50px sorting" tabindex="0"> Bill No</th>
+                            <th class="min-w-50px sorting" tabindex="0"> PP No</th>
+                            <th class="min-w-50px sorting" tabindex="0"> Vendor Name</th>
+                            <th class="min-w-50px sorting" tabindex="0"> Vendor's PAN</th>
+                            <th class="min-w-50px sorting" tabindex="0"> Excise Duty Amount</th>
+                            <th class="min-w-50px sorting" tabindex="0"> Amount</th>
+
+                            <th class="min-w-50px sorting" tabindex="0"> Tax Amount</th>
+                            <th class="min-w-50px sorting" tabindex="0"> Taxable Amount</th>
+                            <th class="min-w-50px sorting" tabindex="0"> Non Tax Purchase</th>
+                            <th class="min-w-50px sorting" tabindex="0">Import Tax Amount</th>
+                        </tr>
+                        <!--end::Table row-->
+                    </thead>
+
+                    <tbody class="fw-bold text-gray-600">
+                        {% for entry in purchase_entry %}
+                        <tr class="odd" id="obj-{{object.pk}}">
+                            <td>{{entry.pk}}</td>
+                            <td>{{entry.bill_date}}</td>
+                            <td>{{entry.bill_no}}</td>
+                            <td>{{entry.pp_no}}</td>
+                            <td>{{entry.vendor_name}}</td>
+                            <td>{{entry.vendor_pan}}</td>
+                            <td>{{entry.excise_duty_amount}}</td>
+                            <td>{{entry.amount}}</td>
+
+                            <td>{{entry.tax_amount}}</td>
+                            <td>{{entry.taxable_amount}}</td>
+
+                            <td>{{entry.non_tax_purchase}}</td>
+                            <td>{{entry.import_tax_amount}}</td>
+
+                        </tr>
+                        {% endfor %}
+                        {% include 'components/total_purchase.html' %}
+                    </tbody>
+                </table>
+            </div>
+
+            <hr>
+
+
+            <div class="d-flex justify-content-between">
+                <h1>Purchase Return</h1>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer"
+                    id="kt_customers_table">
+                    <!--begin::Table head-->
+
+                    <thead>
+                        <!--begin::Table row-->
+                        <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+                            <th class="min-w-10px sorting" tabindex="0"> Entry ID</th>
+                            <th class="min-w-20px sorting" tabindex="0">Bill Date</th>
+                            <th class="min-w-50px sorting" tabindex="0"> Bill No</th>
+                            <th class="min-w-50px sorting" tabindex="0"> PP No</th>
+                            <th class="min-w-50px sorting" tabindex="0"> Vendor Name</th>
+                            <th class="min-w-50px sorting" tabindex="0"> Vendor's PAN</th>
+                            <th class="min-w-50px sorting" tabindex="0"> Excise Duty Amount</th>
+
+                            <th class="min-w-50px sorting" tabindex="0"> Amount</th>
+                            <th class="min-w-50px sorting" tabindex="0"> Tax Amount</th>
+                            <th class="min-w-50px sorting" tabindex="0"> Taxable Amount</th>
+
+                            <th class="min-w-50px sorting" tabindex="0"> Non Tax Purchase</th>
+                            <th class="min-w-50px sorting" tabindex="0">Import Tax Percent</th>
+                        </tr>
+                        <!--end::Table row-->
+                    </thead>
+
+                    <tbody class="fw-bold text-gray-600">
+                        {% for entry in return_entry %}
+                        <tr class="odd" id="obj-{{object.pk}}">
+                            <td>{{entry.pk}}</td>
+                            <td>{{entry.bill_date}}</td>
+                            <td>{{entry.bill_no}}</td>
+                            <td>{{entry.pp_no}}</td>
+                            <td>{{entry.vendor_name}}</td>
+                            <td>{{entry.vendor_pan}}</td>
+                            <td>{{entry.excise_duty_amount}}</td>
+                            <td>{{entry.amount}}</td>
+                            <td>{{entry.tax_amount}}</td>
+                            <td>{{entry.taxable_amount}}</td>
+                            <td>{{entry.non_tax_purchase}}</td>
+                            <td>{{entry.import_tax_amount}}</td>
+
+                        </tr>
+                        {% endfor %}
+                        {% include 'components/total_purchase_return.html' %}
+
+                        {% include 'components/grand_total_purchase.html' %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <br>
+    </div>
+</div>
+{% endblock %}

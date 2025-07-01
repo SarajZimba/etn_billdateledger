@@ -1,0 +1,110 @@
+{% load check_group %}
+<div class="aside-menu flex-column-fluid">
+    <!--begin::Aside Menu-->
+    <div class="hover-scroll-overlay-y my-2 py-5 py-lg-8" id="kt_aside_menu_wrapper" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-height="auto" data-kt-scroll-dependencies="#kt_aside_logo, #kt_aside_footer" data-kt-scroll-wrappers="#kt_aside_menu" data-kt-scroll-offset="0">
+        <!--begin::Menu-->
+        <div class="menu menu-column menu-title-gray-800 menu-state-title-primary menu-state-icon-primary menu-state-bullet-primary menu-arrow-gray-500" id="#kt_aside_menu" data-kt-menu="true">
+        <div class="menu-item">
+            <div class="menu-content pb-2">
+                <span class="menu-section text-muted text-uppercase fs-8 ls-1">Dashboard</span>
+            </div>
+        </div>
+        {% if request.user|has_group:"admin" %} 
+        {%include 'components/menu_item.html' with path="organization" url='org:organization_detail' title='Organization' icon="bi bi-bank" %}
+        {%include 'components/menu_item.html' with path="branch" url='org:branch_list' title='Branches' icon="bi bi-diagram-2" %}
+        {%include 'components/menu_item.html' with path="terminal" url='org:terminal_list' title='Terminal' icon="bi bi-display" %}
+        {%include 'components/menu_item.html' with path="mailrecipient" url='org:mailrecipient_list' title='Mail Recipients' icon="bi bi-envelope" %}
+        {%include 'components/menu_item.html' with path="mobile_payment" url='mobile_payment_type_list' title='Mobile Payment' icon="bi bi-card-checklist" %}
+        
+
+        {%include 'components/menu_title.html' with title="Product Management"%}
+        {%include 'components/menu_item.html' with path="category" url='product_category_list' title='Product Category' icon="bi bi-card-checklist" %}
+
+        {%include 'components/menu_item.html' with path="product" url='product_list' title='Products' icon=" bi bi-box" %}
+{%comment%}
+        {%include 'components/menu_item.html' with path="stock" url='productstock_list' title='Product Stock' icon="bi bi-shop" %}
+{% endcomment %}
+        {%include 'components/menu_item.html' with path="bstck" url='branchstock_list' title='Product Requisition Center' icon="bi bi-shop" %}
+        {%include 'components/menu_item.html' with path="bstck_total" url='branchstock_total' title='Product Branchwise Stock' icon="bi bi-shop" %}
+
+
+        {%include 'components/menu_item.html' with path="client" url='customerproduct_list' title='Customized Rate' icon=" bi bi-box" %}
+
+        {%include 'components/menu_item.html' with path="discount" url='discounttable_list' title='Discount' icon=" bi bi-graph-down" %}
+        {%include 'components/menu_item.html' with path="reconcile" url='reconcile' title='Item Reconcilation' icon=" bi bi-graph-down" %}
+
+
+        {%include 'components/menu_title.html' with title="Purchase Management"%}
+        {%include 'components/menu_item.html' with path="vendor" url='vendor_list' title='Vendor' icon=" bi bi-shop" %}
+        {%include 'components/menu_item.html' with path="purchase" url='purchase_list' title='Purchase' icon=" bi bi-shop" %}
+        {%include 'components/menu_item.html' with path="assetp" url='assetpurchase_list' title='Asset Purchase' icon=" bi bi-shop" %}
+        {%include 'components/menu_item.html' with path="today-prodpur" url='today-prodpur' title='Purchase Report' icon=" bi bi-shop" %}
+
+
+        {%include 'components/menu_item.html' with path="pb" url='purchase_book_list' title='Purchase Book' icon=" bi bi-shop" %}
+
+        {%include 'components/menu_title.html' with title="Import Purchase Management"%}
+        {%include 'components/menu_item.html' with path="importpur_chase" url='importpur_chase_list' title='Import Purchase' icon=" bi bi-shop" %}
+
+
+
+        {%include 'components/menu_title.html' with title="Transaction Management"%}
+        {%include 'components/menu_item.html' with path="bill" url='bill_list' title='Bills' icon=" bi bi-receipt" %}
+        {%include 'components/menu_item.html' with path="todays-transaction" url='todays_transaction' title='Todays Transaction' icon=" bi bi-receipt" %}
+
+        {%include 'components/menu_title.html' with title="IRD"%}
+        {%include 'components/menu_item.html' with path="sales" url='tblsalesentry_list' title='Sales Entry' icon=" bi bi-receipt" %}
+        {%include 'components/menu_item.html' with path="tax" url='tbltaxentry_list' title='Materialized view' icon=" bi bi-receipt" %}
+        {%include 'components/menu_item.html' with path="return" url='tablreturnentry_list' title='Bill Return' icon=" bi bi-receipt" %}
+        {%include 'components/menu_item.html' with path="salebook" url='materialized_view' title='Sales Book' icon=" bi bi-receipt" %}
+
+        {%include 'components/menu_title.html' with title="Reports"%}
+        {%include 'components/menu_item.html' with path="endday-report" url='org:endday_report_list' title='End Day Report' icon=" bi bi-receipt" %}
+        return render(request, 'organization/end_day_report_list.html', {'object_list': reports})
+        {%include 'components/menu_item.html' with path="invoice-summary-register" url='invoice_summary_register' title='Sales Invoice Summary' icon=" bi bi-receipt" %}
+        {%include 'components/menu_item.html' with path="cws" url='customer_wise_sales' title='Sales Invoice Register' icon="bi bi-receipt" %}
+        {%include 'components/menu_item.html' with path="pws" url='party_wise_sales' title='Party Sales Register(VAT Summary)' icon="bi bi-receipt" %}
+        {%include 'components/menu_item.html' with path="sia" url='sales_invoice_analysis' title='Sales Invoice Analysis' icon="bi bi-receipt" %}
+        {%include 'components/menu_item.html' with path="pms" url='payment_mode_summary' title='Bill Summary Details' icon="bi bi-receipt" %}
+        {%include 'components/menu_item.html' with path="bws" url='category_wise_sale' title='Category Sales Report' icon="bi bi-receipt" %}
+
+
+
+        {%include 'components/menu_title.html' with title="Accounting"%}
+        {%include 'components/menu_item.html' with path="accountchart" url='accountchart_list' title='Chart of Accounts' icon="bi bi-bar-chart" %}
+        {%include 'components/menu_item.html' with path="journal" url='journal_list' title='Journal Entries' icon="bi bi-file-earmark-fill" %}
+        {%include 'components/menu_item.html' with path="trial-balance" url='trial_balance_view' title='Trial Balance' icon="bi bi-file-earmark-spreadsheet" %}
+        {%include 'components/menu_item.html' with path="pl" url='pl_view' title='P&L Statement' icon="bi bi-cash-coin" %}
+        {%include 'components/menu_item.html' with path="balance-sheet" url='balance_sheet_view' title='Balance Sheet' icon="bi bi-file-earmark-spreadsheet" %}
+        {%include 'components/menu_item.html' with path="expenses" url='expenses_list' title='Expenses' icon="bi bi-cash-coin" %}
+        {%include 'components/menu_item.html' with path="depreciation" url='depreciation_view' title='Depreciation' icon="bi bi-cash-coin" %}
+        {%include 'components/menu_item.html' with path="party-ledgers" url='partyledger_view' title='Party Ledgers' icon="bi bi-cash-coin" %}
+
+
+
+        {%include 'components/menu_title.html' with title="User Management"%}
+        
+        {%include 'components/menu_item.html' with path="user" url='user:user_list' title='Create User' icon="bi bi-person-check" %}
+        {%include 'components/menu_item.html' with path="agent" url='user:agent_list' title='Agents' icon="bi bi-person-badge" %}
+        {%include 'components/menu_item.html' with path="customer" url='user:customer_list' title='Customers' icon="bi bi-people" %}
+        {%include 'components/menu_item.html' with path="saleman" url='user:saleman_list' title='Sale Agents' icon="bi bi-person-badge" %}
+        {% else %}
+            {%include 'components/menu_title.html' with title="Customer Management"%}
+            {%include 'components/menu_item.html' with path="customer" url='user:customer_list' title='Customers' icon="bi bi-people" %}
+
+            {%include 'components/menu_title.html' with title="Bill Management"%}
+            {%include 'components/menu_item.html' with path="bill" url='bill_list' title='Bills' icon=" bi bi-receipt" %}
+
+            {%include 'components/menu_title.html' with title="Sales Report"%}
+            {%include 'components/menu_item.html' with path="sales" url='tblsalesentry_list' title='Sales Entry' icon=" bi bi-receipt" %}
+            {%include 'components/menu_item.html' with path="tax" url='tbltaxentry_list' title='Materialized view' icon=" bi bi-receipt" %}
+            {% comment %}
+            {%include 'components/menu_item.html' with path="return" url='tablreturnentry_list' title='Bill Return' icon=" bi bi-receipt" %}
+            {% endcomment %}
+            {%include 'components/menu_item.html' with path="salebook" url='materialized_view' title='Sales Book' icon=" bi bi-receipt" %}
+        {% endif %}
+
+        </div>
+        <!--end::Menu-->
+    </div>
+</div>

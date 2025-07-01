@@ -1,0 +1,827 @@
+{%extends 'base.html'%} {%load static%} {%block title%} Create {%endblock%}
+{% load tags %}
+{%block content %}
+<div class="card p-2">
+
+<div class="card-body p-4 m-4">
+
+  <h1>{% if title %} {{title}} {% else %} Create {% endif %}</h1>
+    <form  name="purchase_form" method="post">
+      <input type="hidden" name="product_id_list" id="product-id-list">
+      <input type="hidden" name="ledger_id_list" id="ledger-id-list">
+      <input type="hidden" name="product_taxable_info" id="product_taxable_info">
+      <input type="hidden" name="product_category_info" id="product_category_info">
+      <!-- <input type="hidden" name="excise_duty_amount" id="id_excise_duty_amount"> -->
+
+      <div class="row">
+
+         {% for field in form.visible_fields %}
+
+         {% if field.field.widget.input_type == "text" or field.field.widget.input_type == "number" or field.field.widget.input_type == "datetime-local" or field.field.widget.input_type == "url" or field.field.widget.input_type == "email" or field.field.widget.input_type == "date" %}
+        
+          {% if field.label == "Discount amount"%}
+            <div class="col-md-3 fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+            {% else %}
+            <div class="col-md-6 fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+          {% endif %}
+
+         {% elif field.field.widget.input_type == "textarea" %}
+                <div class="col-md-12 fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+         {% elif  field.field.widget.input_type == "checkbox" %}
+                <div class="row fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+          {% else %}
+
+          {% if field.label == "Discount percentage"%}
+
+          <div class="col-md-3 fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+
+          {% else %}
+
+          <div id="div-{{field.auto_id}}">
+        {% endif %}
+
+          {% endif %}
+            <p class="form-group">
+                  {% if field.label == "Product" %}
+                  <label>
+                        {{field.label}}
+                  </label>
+                  {{field}}
+                  <div>
+                    <div class="table-responsive mb-8" >
+                      <table class="table align-middle gs-0 gy-4 my-0">
+                        <thead>
+                          <tr>
+                            <th class="w-80px">Remove</th>
+                            <th class="min-w-175px">Name</th>
+                            <th class="w-100px">Category</th>
+                            <th class="w-85px">Rate</th>
+                            <th class="min-w-100px">Quantity</th>
+                            <th class="w-85px">Taxable</th>
+                            <th class="w-85px">Excise Duty Applicable</th>
+                            <th class="w-80px">Total</th>
+                            <th class="w-80px">Ledger</th>
+                          </tr>
+                        </thead>
+                        <tbody  id="bill_item">
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  {% elif field.field.widget.input_type == "checkbox" and field.field.widget.allow_multiple_selected  %}
+                  <label>
+                        {{field}}
+                      <span class="form-check-label fw-bold text-muted" >
+                        {{field.label}}
+                      </span>
+                  </label>
+                  {% else %}
+
+                  <label for="{{field.auto_id}}">{{field.label}}</label>
+                  {{field}}
+                  <div class="fv-plugins-message-container invalid-feedback"><div data-field="daterangepicker_input"> {{field.errors}} </div></div>
+                  {% endif %}
+                  </p>
+                  </div>
+                    {% endfor %}
+          </div>
+
+        {% csrf_token %}
+
+
+    <button type="submit" id="submit-button" class="btn btn-primary">Create Purchase Entry</button>
+  </form>
+  </div>
+</div>
+
+
+
+{% comment %} {% include 'select2.html' %} {% endcomment %}
+{% endblock %}
+
+
+{% block footer_js %}
+<script src="{% static 'js/num2words.js' %}"></script>
+<script type="text/javascript">
+
+function validateForm() {
+    let isValid = true;
+    const errorMessages = [];
+    const invalidFields = [];
+
+    // Check all products in the bill item table
+    $('#bill_item tr').each(function() {
+        const row = $(this);
+        const productId = row.attr('id').split('_').pop();
+        const productName = $(`#id_title_${productId}`).text();
+        
+        // Get all relevant fields
+        const ledgerSelect = row.find('select[id^="ledger_select_"]');
+        const quantityInput = $(`#id_bill_item_quantity_${productId}`);
+        const categoryInput = $(`#id_bill_item_category_${productId}`);
+        const rateInput = $(`#id_bill_item_rate_${productId}`);
+        
+        // Reset visual validation
+        ledgerSelect.removeClass('is-invalid');
+        quantityInput.removeClass('is-invalid');
+        if (categoryInput.length) categoryInput.removeClass('is-invalid');
+        rateInput.removeClass('is-invalid');
+
+        // Validate ledger (required for ALL products)
+        const ledgerId = ledgerSelect.val();
+        if (ledgerId === '------' || !ledgerId) {
+            isValid = false;
+            ledgerSelect.addClass('is-invalid');
+            invalidFields.push(`ledger_${productId}`);
+            errorMessages.push(`- Select a ledger for "${productName}"`);
+        }
+
+        // Validate quantity (required for ALL products)
+        const quantity = parseFloat(quantityInput.val());
+        if (isNaN(quantity)) {
+            isValid = false;
+            quantityInput.addClass('is-invalid');
+            invalidFields.push(`quantity_${productId}`);
+            errorMessages.push(`- Enter valid quantity for "${productName}"`);
+        } else if (quantity <= 0) {
+            isValid = false;
+            quantityInput.addClass('is-invalid');
+            invalidFields.push(`quantity_${productId}`);
+            errorMessages.push(`- Quantity must be > 0 for "${productName}"`);
+        }
+
+        // Validate rate (required for ALL products)
+        const rate = rateInput.val();
+        if (!rate || !/^\d+(\.\d+)?$/.test(rate) || parseFloat(rate) <= 0) {
+            isValid = false;
+            rateInput.addClass('is-invalid');
+            invalidFields.push(`rate_${productId}`);
+            errorMessages.push(`- Enter valid rate (>0) for "${productName}"`);
+        }
+
+        // Validate category (only required for NEW products)
+        if (categoryInput.length > 0) { // This is a new product
+            const category = categoryInput.val().trim();
+            if (!category) {
+                isValid = false;
+                categoryInput.addClass('is-invalid');
+                invalidFields.push(`category_${productId}`);
+                errorMessages.push(`- Enter category for new product "${productName}"`);
+            }
+        }
+    });
+
+    if (!isValid) {
+        // Scroll to first invalid field
+        if (invalidFields.length > 0) {
+            const [fieldType, productId] = invalidFields[0].split('_');
+            const selector = fieldType === 'ledger' ? 
+                `#ledger_select_${productId}` : 
+                `#id_bill_item_${fieldType}_${productId}`;
+            $(selector)[0].scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+
+        // Show comprehensive error message
+        alert("Please fix the following issues:\n\n" + errorMessages.join('\n'));
+    }
+
+    return isValid;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form[name='purchase_form']");
+    const submitButton = document.getElementById("submit-button");
+
+    form.addEventListener("submit", function (event) {
+      // submitButton.disabled = true;
+      if (!validateForm()) {
+            event.preventDefault(); // Prevent form submission
+        } else {
+            submitButton.disabled = true; // Disable submit button if validation passes
+        }
+    });
+  });
+
+const selectedItemId = [];
+let newCreatedItems = {};
+let newCategoryItems = {};
+const selectedLedgerId = [];
+
+let latestTotal = 0;
+
+$(document).ready(function() {
+   $('#id_').focus();
+    $('#id_grand_total').on('keyup change', function() {
+        const amount = parseFloat($(this).val()) || 0;
+
+        $('#id_amount_in_words').val(convertToIndianRupeesWords(amount));
+    });
+});
+
+$('#id_product').select2({
+  tags: true,
+  placeholder: 'Select or Create Product',
+});
+
+// // // Also prevent pasting of invalid characters
+// $('#id_product').on('paste', function(e) {
+//   // Get pasted data
+//   const pastedData = e.originalEvent.clipboardData.getData('text');
+  
+//   // Check if it contains invalid characters
+//   if (/[^a-zA-Z0-9-]/.test(pastedData)) {
+//     e.preventDefault();
+//     pastedData.replace(/[^a-zA-Z0-9-]/g, '');
+//     alert('Product names can only contain letters, numbers, and hyphens. No spaces or special characters allowed.');
+//   }
+// });
+
+// $('#id_product').select2({
+//   tags: true,
+//   placeholder: 'Select or Create Product',
+//   createTag: function(params) {
+//     const term = $.trim(params.term);
+    
+//     // Prevent creation if invalid characters
+//     if (/[^a-zA-Z0-9-]/.test(term)) {
+//       // Show error and prevent tag creation
+//       alert('Only letters, numbers and hyphens allowed. No spaces or special characters.');
+//       return null;
+//     }
+    
+//     return {
+//       id: term,
+//       text: term,
+//       newTag: true
+//     };
+//   }
+// });
+
+// // Also prevent pasting of invalid characters
+$('#id_product').on('paste', function(e) {
+  // Get pasted data
+  const pastedData = e.originalEvent.clipboardData.getData('text');
+  
+  // Check if it contains invalid characters
+  if (/[^a-zA-Z0-9 ]/.test(pastedData)) {
+    e.preventDefault();
+    pastedData.replace(/[^a-zA-Z0-9 ]/g, '');
+    alert('Product names can only contain letters, numbers, and hyphens. No spaces or special characters allowed.');
+  }
+});
+
+$('#id_product').select2({
+  tags: true,
+  placeholder: 'Select or Create Product',
+  createTag: function(params) {
+    const term = $.trim(params.term);
+    
+    // Final validation before tag creation
+    if (/[^a-zA-Z0-9 ]/.test(term)) {
+      alert('Only letters, numbers and hyphens allowed. No spaces or special characters.');
+      return null;
+    }
+    
+    return {
+      id: term,
+      text: term,
+      newTag: true
+    };
+  }
+});
+
+// Prevent typing spaces and special characters in real-time
+$(document).on('keydown', '.select2-search__field', function(e) {
+  // Allow navigation and control keys
+  if ([8, 9, 13, 27, 37, 38, 39, 40, 46].includes(e.keyCode) || 
+      (e.ctrlKey && [65, 67, 86, 88].includes(e.keyCode))) {
+    return;
+  }
+  
+  // // Block space (keyCode 32) and special characters
+  // if (e.keyCode === 32 || !/^[a-zA-Z0-9-]$/.test(e.key)) {
+  //   e.preventDefault();
+  // }
+  // Block hyphen (keyCode 189) but allow space (keyCode 32)
+  if (e.keyCode === 189 || (!/^[a-zA-Z0-9 ]$/.test(e.key) && e.keyCode !== 32)) {
+    e.preventDefault();
+  }
+});
+
+// Sanitize paste events
+$(document).on('paste', '.select2-search__field', function(e) {
+  const pasteData = e.originalEvent.clipboardData.getData('text');
+  const sanitized = pasteData.replace(/[^a-zA-Z0-9 ]/g, '');
+  
+  if (pasteData !== sanitized) {
+    alert('Pasted content contained invalid characters - only letters, numbers and hyphens are allowed');
+  }
+  
+  // Replace with sanitized version after paste completes
+  setTimeout(() => {
+    $(this).val(sanitized);
+  }, 0);
+});
+
+  function calculatePrices(taxEdited=false){
+    let taxableAmount = 0
+    let nonTaxableAmount = 0
+    let exciseDutyAmount = 0;
+    let taxableExciseDuty = 0; // Only excise duty for taxable products
+    let idarray = $("#bill_item .text-end")
+                 .find("span") 
+                 .map(function() { return this.id; }) 
+                 .get(); 
+
+    let sub_total = idarray.map(e=>$(`#${e}`).html()).reduce((total, current) => {
+            // return Number(parseFloat(total) + parseFloat(current)).toFixed(2);
+            return parseFloat(total) + parseFloat(current);
+        }, 0);
+    
+    idarray.forEach(e=>{
+        const element = document.getElementById(e)
+        const isTaxable = element.getAttribute('taxable') === "true";
+        const total = parseFloat(element.innerHTML)
+        const productId = e.split('_').pop();
+        const isExciseDutyApplicable = element.getAttribute('excise_duty_applicable') === "true";
+        
+        if(isTaxable){
+            taxableAmount += total;
+            // Calculate excise duty for taxable products only
+            if (isExciseDutyApplicable) {
+                const exciseDuty = total * 0.05;
+                exciseDutyAmount += exciseDuty;
+                taxableExciseDuty += exciseDuty;
+            }
+        } else {
+            nonTaxableAmount += total;
+            // Calculate excise duty separately for non-taxable products
+            if (isExciseDutyApplicable) {
+                const exciseDuty = total * 0.05;
+                exciseDutyAmount += exciseDuty;
+            }
+        }
+    })
+
+    $('#id_sub_total').val(taxableAmount + nonTaxableAmount)
+    const subTotal = parseFloat($('#id_sub_total').val())
+
+    const discountPercentage = parseInt($('#id_discount_percentage').val())
+    const discountAmount = discountPercentage/100 * subTotal
+    $('#id_discount_amount').val(subTotal*(discountPercentage/100))
+
+    // Apply discount proportionally
+    taxableAmount -= discountPercentage/100*taxableAmount
+    nonTaxableAmount -= discountPercentage/100*nonTaxableAmount
+    // Also apply discount to excise duty portion
+    taxableExciseDuty -= discountPercentage/100*taxableExciseDuty
+
+    $('#id_non_taxable_amount').val(nonTaxableAmount.toFixed(2))
+    
+    // Taxable amount = taxable products + excise duty (only for taxable products)
+    const totalTaxableAmount = taxableAmount + taxableExciseDuty;
+    
+    // Calculate VAT on taxable amount (including excise duty for taxable products only)
+    let vatAmount = parseFloat(0.13 * totalTaxableAmount).toFixed(2)
+    if(taxEdited){
+        vatAmount = parseFloat($('#id_tax_amount').val()).toFixed(2)
+    }
+    
+    $('#id_taxable_amount').val(totalTaxableAmount.toFixed(2))
+    $('#id_tax_amount').val(vatAmount)
+    
+    // Calculate grand total (includes all excise duty, regardless of taxable status)
+    const grandTotal = parseFloat(taxableAmount) + 
+                      parseFloat(nonTaxableAmount) + 
+                      parseFloat(vatAmount) + 
+                      parseFloat(exciseDutyAmount);
+    
+    $('#id_grand_total').val(grandTotal.toFixed(2));
+    $('#id_grand_total').keyup();
+    $('#id_excise_duty_amount').val(exciseDutyAmount.toFixed(2));
+}
+
+  $('#id_product').on('change', async function() {
+    let pk = this.value;
+    if (!selectedItemId.includes(pk)){
+      selectedItemId.push(pk)
+      document.getElementById('product-id-list').value = selectedItemId.toString()
+      let bill_item = null
+      try{
+        billItem = await getBillItem(pk)
+      }catch (e){
+        let title = pk
+        if(pk.includes(' ')){
+          title = pk.split(' ').join('-')
+        }
+        billItem = createNewRow(title)
+        newCreatedItems[title] = "true"
+        document.getElementById('product_taxable_info').value = JSON.stringify(newCreatedItems)
+      }
+      
+      $('#bill_item').append(billItem)
+      calculatePrices()
+
+    }else{
+      alert('Item is already selected') 
+    }
+
+
+  });
+
+
+  function removeItemFromBill(event){
+    const elementIdTagArray = event.id.split('_')
+    const id = elementIdTagArray[elementIdTagArray.length -1]
+    const ind = selectedItemId.indexOf(id)
+    selectedItemId.splice(ind,1)
+    
+    const tableBody = document.querySelector('#bill_item');
+    const tableRow = document.querySelector(`#id_bill_item_${id}`)
+    tableBody.removeChild(tableRow)
+    document.getElementById('product-id-list').value = selectedItemId.toString()
+    calculatePrices()
+  }
+
+  
+  async function getBillItem(id){
+        let new_data;
+        const url = `{% settings_value "HOST_URL" %}/api/product-detail/${id}` 
+        await $.ajax({
+          url:url, 
+          type: "GET",
+          success: function(data){
+                console.log("product_data", data)
+                const quantity = 1
+                const {title, price, is_taxable, ledger, ledger_name, excise_duty_applicable} = data
+                const total = 0
+
+                const ledgerOptions = `{% for ledger in purchases_and_expenses_ledgers %}
+                <option value="{{ ledger.id }}">{{ ledger.ledger_name }}</option>
+                {% endfor %}`;
+
+                const isDisabled = ledger_name !== null && ledger !== null;
+              
+                new_data=`
+                <tr data-kt-pos-element="item" data-kt-pos-item-price="33" id="id_bill_item_${id}">
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <span class="fw-bold text-gray-800 cursor-pointer text-hover-primary fs-6 me-1"> 
+                        <button onclick="removeItemFromBill(this)" id="remove_${id}" type="button" class="btn btn-danger"> X </button>
+                          </span>
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <span class="fw-bold text-gray-800 cursor-pointer text-hover-primary fs-6 me-1" id="id_title_${id}">${title}</span>
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <input type="text" class="form-control" placeholder="Rate" id="id_bill_item_rate_${id}" name="id_bill_item_rate_${id}" value="${price}" onkeyup="handleRateChange(this)">
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="position-relative d-flex align-items-center" data-kt-dialer="true" data-kt-dialer-min="0" data-kt-dialer-max="10" data-kt-dialer-step="1" data-kt-dialer-decimals="0">
+                      <button type="button" class="btn btn-icon btn-sm btn-light btn-icon-gray-400" data-kt-dialer-control="decrease" id="${id}"  onclick="handleQuantity(this,'decrease')">
+                        <span class="svg-icon svg-icon-3x">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="6" y="11" width="12" height="2" rx="1" fill="currentColor"></rect>
+                          </svg>
+                        </span>
+                      </button>
+                <input type="text" class="form-control border-0 text-center px-0 fs-3 fw-bold text-gray-800 w-30px" data-kt-dialer-control="input"   id="id_bill_item_quantity_${id}" onkeyup="handleQuantity(this,'set')" name="id_bill_item_quantity_${id}" value="0" step="any">
+                      <button type="button" class="btn btn-icon btn-sm btn-light btn-icon-gray-400" data-kt-dialer-control="increase" id="${id}" onclick="handleQuantity(this,'increase')">
+                        <span class="svg-icon svg-icon-3x">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect opacity="0.5" x="11" y="18" width="12" height="2" rx="1" transform="rotate(-90 11 18)" fill="currentColor"></rect>
+                            <rect x="6" y="11" width="12" height="2" rx="1" fill="currentColor"></rect>
+                          </svg>
+                        </span>
+                      </button>
+                    </div>
+                  </td>
+
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <span class="fw-bold cursor-pointer text-hover-primary fs-6 me-1">${is_taxable?'<span class="text-danger">YES<span>':'<span class="text-success">NO</span>'}</span>
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <span class="fw-bold cursor-pointer text-hover-primary fs-6 me-1">${excise_duty_applicable?'<span class="text-danger">YES<span>':'<span class="text-success">NO</span>'}</span>
+                    </div>
+                  </td>
+
+                  <td class="text-end">
+                    <span class="fw-bold text-primary fs-2" data-kt-pos-element="item-total" id="id_bill_item_total_${id}" taxable="${is_taxable}" excise_duty_applicable="${excise_duty_applicable}" data-total="${total}">${total}</span>
+                  </td>
+                  <td class="col-md-2">
+                    <select class="ledger-select form-control" name="test_credit_ledger" required id="ledger_select_${id}" onchange="handleLedgerInput(this)" data-total="${total}" ${isDisabled ? 'disabled' : ''}>
+                    ${ledger ? `<option value="${ledger}" selected>${ledger_name}</option>` : ''}
+                      ${ledgerOptions}
+                    </select>
+
+
+          </td>
+                </tr>
+              `
+
+
+          }
+        })
+      return new_data
+  }
+
+  console.log(selectedLedgerId)
+
+function createNewRow(title){
+    id = title
+    product_display = formatProductName(id)
+    const ledgerOptions = `{% for ledger in purchases_and_expenses_ledgers %}
+                <option value="{{ ledger.id }}">{{ ledger.ledger_name }}</option>
+                {% endfor %}`;
+    
+    return `
+                <tr data-kt-pos-element="item" data-kt-pos-item-price="33" id="id_bill_item_${id}">
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <span class="fw-bold text-gray-800 cursor-pointer text-hover-primary fs-6 me-1"> 
+                        <button onclick="removeItemFromBill(this)" id="remove_${id}" type="button" class="btn btn-danger"> X </button>
+                      </span>
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <span class="fw-bold text-gray-800 cursor-pointer text-hover-primary fs-6 me-1" id="id_title_${id}">${product_display}</span>
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <input type="text" class="form-control" placeholder="Category" id="id_bill_item_category_${id}" name="id_bill_item_category_${id}" onkeyup="handleCategoryInput(this)">
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <input type="text" class="form-control" placeholder="Rate" id="id_bill_item_rate_${id}" name="id_bill_item_rate_${id}" value="1" onkeyup="handleRateChange(this)">
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="position-relative d-flex align-items-center" data-kt-dialer="true" data-kt-dialer-min="0" data-kt-dialer-max="10" data-kt-dialer-step="1" data-kt-dialer-decimals="0">
+                      <button type="button" class="btn btn-icon btn-sm btn-light btn-icon-gray-400" data-kt-dialer-control="decrease" id="${id}"  onclick="handleQuantity(this,'decrease')">
+                        <span class="svg-icon svg-icon-3x">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="6" y="11" width="12" height="2" rx="1" fill="currentColor"></rect>
+                          </svg>
+                        </span>
+                      </button>
+                      <input type="text" class="form-control border-0 text-center px-0 fs-3 fw-bold text-gray-800 w-30px" data-kt-dialer-control="input" id="id_bill_item_quantity_${id}" onkeyup="handleQuantity(this,'set')" name="id_bill_item_quantity_${id}" value="0" step="any">
+                      <button type="button" class="btn btn-icon btn-sm btn-light btn-icon-gray-400" data-kt-dialer-control="increase" id="${id}" onclick="handleQuantity(this,'increase')">
+                        <span class="svg-icon svg-icon-3x">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect opacity="0.5" x="11" y="18" width="12" height="2" rx="1" transform="rotate(-90 11 18)" fill="currentColor"></rect>
+                            <rect x="6" y="11" width="12" height="2" rx="1" fill="currentColor"></rect>
+                          </svg>
+                        </span>
+                      </button>
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <span class="fw-bold cursor-pointer text-hover-primary fs-6 me-1">
+                        <select class="form-control" id="id_taxable_change_${id}" onchange="handleTaxableChange(this)">
+                          <option value="true" selected>YES</option>
+                          <option value="false">NO</option>
+                        </select>
+                      </span>
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <span class="fw-bold cursor-pointer text-hover-primary fs-6 me-1">
+                        <select class="form-control" id="id_excise_duty_applicable_${id}" onchange="handleExciseDutyChange(this)">
+                          <option value="true">YES</option>
+                          <option value="false" selected>NO</option>
+                        </select>
+                      </span>
+                    </div>
+                  </td>
+                  <td class="text-end">
+                    <span class="fw-bold text-primary fs-2" data-kt-pos-element="item-total" id="id_bill_item_total_${id}" taxable="true" excise_duty_applicable="false">1</span>
+                  </td>
+                  <td class="col-md-2">
+                    <select class="ledger-select form-control" name="test_credit_ledger" required id="ledger_select_${id}" onchange="handleLedgerInput(this)">
+                      <option value="------" selected>-----</option>
+                      ${ledgerOptions}
+                    </select>
+                  </td>
+                </tr>
+              `;
+}
+
+
+  function handleTaxableChange(e){
+    let itemName = e.getAttribute('id').split('_')[3]
+    document.getElementById(`id_bill_item_total_${itemName}`).setAttribute('taxable',e.value )
+    newCreatedItems[itemName] = e.value
+    document.getElementById('product_taxable_info').value = JSON.stringify(newCreatedItems)
+    calculatePrices()
+  }
+
+  function handleCategoryInput(e){
+    let itemName = e.getAttribute('id').split('_')[4]
+    newCategoryItems[itemName] = e.value
+    document.getElementById('product_category_info').value = JSON.stringify(newCategoryItems)
+  }
+
+
+  
+
+  async function handleRateChange(e){
+      const id = e.id.split('_')[4]
+      const quantity = $(`#id_bill_item_quantity_${id}`).val()
+      const total = parseFloat(e.value) * parseFloat(quantity)
+      latestTotal = total;
+      console.log(latestTotal)
+      $(`#id_bill_item_total_${id}`).html(parseFloat(total).toFixed(2))
+
+      $(`#id_bill_item_total_${id}`).attr('data-total', total);
+      $(`#ledger_select_${id}`).attr('data-total', total);
+      calculatePrices()
+
+      handleLedgerInput($(`#ledger_select_${id}`)[0]);
+  }
+
+ function handleQuantity(e,option) {
+     let id;
+     if(option=='set'){
+         id = e.id.split('_')[4]
+     }else{
+        id = e.id 
+     }
+     const currentQuantity = $(`#id_bill_item_quantity_${id}`).val()
+     const rate = $(`#id_bill_item_rate_${id}`).val()
+     let total; 
+     if(option=='increase'){
+       const newQuantity = parseFloat(currentQuantity) + 1
+       $(`#id_bill_item_quantity_${id}`).val(newQuantity)
+       total = newQuantity * parseFloat(rate)
+     }else if(option=='decrease'){
+        if(currentQuantity>1){
+         const newQuantity = parseFloat(currentQuantity) - 1
+         $(`#id_bill_item_quantity_${id}`).val(newQuantity)
+         total = newQuantity * parseFloat(rate)
+        }
+     }
+    //  else if (option=='set'){
+    //        const quantity = parseFloat($(`#${e.id}`).val())
+    //        if(quantity>=1){
+    //          $(`#id_bill_item_quantity_${id}`).val(quantity)
+    //          total = quantity * parseFloat(rate)
+    //        }
+    //    }
+      else if (option=='set'){
+        // Get the raw input value
+        const rawInput = $(`#${e.id}`).val();
+        
+        // Sanitize the input: keep only numbers and one decimal point
+        const sanitizedInput = rawInput
+            .replace(/[^0-9.]/g, '')  // Remove all non-numeric characters except '.'
+            .replace(/(\..*)\./g, '$1');  // Allow only one decimal point
+
+        // Parse the sanitized value (default to 0 if empty)
+        const quantity = parseFloat(sanitizedInput) || 0;
+
+        // Update the input field with the sanitized value
+        $(`#id_bill_item_quantity_${id}`).val(sanitizedInput);
+
+        // Calculate total only if quantity is positive
+        if (quantity > 0) {
+            total = quantity * parseFloat(rate);
+        }
+
+       }
+       
+      latestTotal = total;
+      console.log(latestTotal)
+     $(`#id_bill_item_total_${id}`).html(parseFloat(total).toFixed(2))
+     $(`#id_bill_item_total_${id}`).attr('data-total', total);
+     $(`#ledger_select_${id}`).attr('data-total', total);
+
+      calculatePrices()
+
+      handleLedgerInput($(`#ledger_select_${id}`)[0]);
+ }
+
+ $('#id_discount_percentage').on('change', function() {
+     calculatePrices()
+  })
+
+  $('#id_tax_amount').on('change', function(e) {
+    calculatePrices(taxEdited=true)
+  })
+
+  let newLedgerItems = {}
+  function handleLedgerInput(e){
+    console.log("Function called")
+    let itemLedger = e.getAttribute('id').split('_')[2]
+    let total = parseFloat($(`#id_bill_item_total_${itemLedger}`).attr('data-total'));
+    // let total1 = parseFloat($(`#ledger_select_${itemLedger}`).attr('data-total'));
+    let new_total = latestTotal
+    console.log(new_total)
+    console.log(e.value)
+    console.log(total)
+
+    // newLedgerItems[itemLedger] = e.value
+    newLedgerItems[itemLedger] ={ ledgerId:e.value, 
+                                    total:total,
+                                    total1:new_total
+    }
+    document.getElementById('ledger-id-list').value = JSON.stringify(newLedgerItems)
+  }
+
+
+  
+  function handleExciseDutyChange(e) {
+    let itemName = e.getAttribute('id').split('_')[4];
+    document.getElementById(`id_bill_item_total_${itemName}`).setAttribute('excise_duty_applicable', e.value);
+    calculatePrices();
+}
+
+function convertToIndianRupeesWords(num) {
+    const singleDigits = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const doubleDigits = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tensMultiple = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    const placeValues = ['', 'Thousand', 'Lakh', 'Crore'];
+
+    function getTwoDigitWords(n) {
+        if (n < 10) return singleDigits[n];
+        if (n < 20) return doubleDigits[n - 10];
+        const tens = Math.floor(n / 10);
+        const units = n % 10;
+        return tensMultiple[tens] + (units ? ' ' + singleDigits[units] : '');
+    }
+
+    function getThreeDigitWords(n) {
+        const hundred = Math.floor(n / 100);
+        const rest = n % 100;
+        let result = '';
+        if (hundred > 0) result += singleDigits[hundred] + ' Hundred';
+        if (rest > 0) result += (result ? ' ' : '') + getTwoDigitWords(rest);
+        return result;
+    }
+
+    function convertWholeNumberIndianStyle(n) {
+        if (n === 0) return 'Zero';
+
+        const parts = [];
+
+        const units = n % 1000;
+        n = Math.floor(n / 1000);
+        parts.push(units);
+
+        while (n > 0) {
+            parts.push(n % 100);
+            n = Math.floor(n / 100);
+        }
+
+        const words = [];
+        for (let i = parts.length - 1; i >= 0; i--) {
+            if (parts[i]) {
+                const word = i === 0 ? getThreeDigitWords(parts[i]) : getTwoDigitWords(parts[i]);
+                const place = placeValues[i] || '';
+                words.push(word + (place ? ' ' + place : ''));
+            }
+        }
+
+        return words.join(' ');
+    }
+
+    const decimalSplit = num.toString().split('.');
+    const whole = parseInt(decimalSplit[0]);
+    const decimal = decimalSplit[1] ? parseInt(decimalSplit[1].substring(0, 2)) : null;
+
+    let result = convertWholeNumberIndianStyle(whole) + ' Rupees';
+
+    if (decimal && !isNaN(decimal) && decimal > 0) {
+        result += ' and ' + getTwoDigitWords(decimal) + ' Paisa';
+    }
+
+    return result;
+}
+
+
+function formatProductName(name) {
+  return name.replace(/-/g, ' ');
+}
+
+</script>
+{% endblock %}

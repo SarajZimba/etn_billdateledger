@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{%block title%} Dashboard {%endblock%}
+{%block content%}
+<div id="kt_content_container" class="container-xxl">
+
+	<!--begin::Row-->
+	<div class="row gy-5 g-xl-8">
+		<!--begin::Col-->
+		<div class="col-xl-4">
+			<!--begin::List Widget 3-->
+			<div class="card card-xl-stretch mb-xl-8">
+				<!--begin::Header-->
+				<div class="card-header border-0">
+					<h3 class="card-title fw-bolder text-dark">Organization</h3>
+				</div>
+				<!--end::Header-->
+				<!--begin::Body-->
+				<div class="card-body pt-2">
+					<!--begin::Item-->
+					<div class="d-flex align-items-center mb-8">
+						<!--begin::Bullet-->
+						<span class="bullet bullet-vertical h-40px bg-success"></span>
+						<!--end::Bullet-->
+						<!--begin::Checkbox-->
+						<div class="form-check form-check-custom form-check-solid mx-5">
+						</div>
+						<!--end::Checkbox-->
+						<!--begin::Description-->
+						<div class="flex-grow-1">
+							<a href="#" class="text-gray-800 text-hover-primary fw-bolder fs-6">Organization 1</a>
+							<span class="text-muted fw-bold d-block">Organization Address</span>
+						</div>
+						<!--end::Description-->
+						<span class="badge badge-light-success fs-8 fw-bolder">12</span>
+					</div>
+					
+				</div>
+				<!--end::Body-->
+			</div>
+			<!--end:List Widget 3-->
+		</div>
+		<!--end::Col-->
+		<!--begin::Col-->
+		<div class="col-xl-8">
+			<!--begin::Tables Widget 9-->
+			<div class="card card-xl-stretch mb-5 mb-xl-8">
+				<!--begin::Header-->
+				<div class="card-header border-0 pt-5">
+					<h3 class="card-title align-items-start flex-column">
+						<span class="card-label fw-bolder fs-3 mb-1">Customers</span>
+						<span class="text-muted mt-1 fw-bold fs-7"><a href="{%url 'user:customer_list'%}"> View All Customers </a></span>
+					</h3>
+					<div class="card-toolbar" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-trigger="hover" title="Click to add a customer">
+						<a href="{%url 'user:customer_create'%}" class="btn btn-sm btn-light btn-active-primary">New Customer</a>
+					</div>
+				</div>
+				<!--end::Header-->
+				<!--begin::Body-->
+				<div class="card-body py-3">
+					<!--begin::Table container-->
+					<div class="table-responsive">
+						<!--begin::Table-->
+						<table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
+							<!--begin::Table head-->
+							<thead>
+								<tr class="fw-bolder text-muted">
+									<th class="min-w-150px">Customer</th>
+									<th class="min-w-140px">Branch</th>
+									<th class="min-w-120px">Tax Number</th>
+								</tr>
+							</thead>
+							<!--end::Table head-->
+							<!--begin::Table body-->
+							<tbody>
+								<tr>
+									<td>
+										<div class="d-flex align-items-center">
+											<div class="d-flex justify-content-start flex-column">
+												<a href="#" class="text-dark fw-bolder text-hover-primary fs-6">Ana Simmons</a>
+											</div>
+										</div>
+									</td>
+									<td>
+										<span class="text-muted fw-bold text-muted d-block fs-7">Web, UI/UX Design</span>
+									</td>
+									<td class="text-end">
+										090-89009-09
+									</td>
+
+								</tr>
+
+							</tbody>
+							<!--end::Table body-->
+						</table>
+						<!--end::Table-->
+					</div>
+					<!--end::Table container-->
+				</div>
+				<!--begin::Body-->
+			</div>
+			<!--end::Tables Widget 9-->
+		</div>
+		<!--end::Col-->
+	</div>
+	<!--end::Row-->
+	<!--begin::Row-->
+	<div class="row gy-5 g-xl-8">
+		<!--begin::Col-->
+		<div class="col-xl-4">
+			<!--begin::List Widget 2-->
+			<div class="card card-xl-stretch mb-xl-8">
+				<!--begin::Header-->
+				<div class="card-header border-0">
+					<h3 class="card-title fw-bolder text-dark">Admins</h3>
+
+				</div>
+				<!--end::Header-->
+				<!--begin::Body-->
+				<div class="card-body pt-2">
+					<!--begin::Item-->
+					<div class="d-flex align-items-center mb-7">
+						<!--begin::Avatar-->
+					   <div class="symbol symbol-50px me-5">
+                            {%include 'components/avatar.html' with title='Emma Smith'%}
+                        </div>
+						<!--end::Avatar-->
+						<!--begin::Text-->
+						<div class="flex-grow-1">
+							<a href="#" class="text-dark fw-bolder text-hover-primary fs-6">Emma Smith</a>
+							<span class="text-muted d-block fw-bold">Organization Name</span>
+						</div>
+						<!--end::Text-->
+					</div>
+					<!--end::Item-->
+				
+				</div>
+				<!--end::Body-->
+			</div>
+			<!--end::List Widget 2-->
+		</div>
+		<!--end::Col-->
+		<!--begin::Col-->
+		<div class="col-xl-4">
+			<!--begin::List Widget 6-->
+			<div class="card card-xl-stretch mb-xl-8">
+				<!--begin::Header-->
+				<div class="card-header border-0">
+					<h3 class="card-title fw-bolder text-dark">Broadcast Notifications</h3>
+			
+				</div>
+				<!--end::Header-->
+				<!--begin::Body-->
+				<div class="card-body pt-0">
+					<!--begin::Item-->
+					<div class="d-flex align-items-center bg-light-warning rounded p-5 mb-7">
+						<!--begin::Title-->
+						<div class="flex-grow-1 me-2">
+							<a href="#" class="fw-bolder text-gray-800 text-hover-primary fs-6">Notificaiton.</a>
+						</div>
+						<!--end::Title-->
+						<!--begin::Lable-->
+						<!--end::Lable-->
+					</div>
+				
+				</div>
+				<!--end::Body-->
+			</div>
+			<!--end::List Widget 6-->
+		</div>
+		<!--end::Col-->
+		<!--begin::Col-->
+		<div class="col-xl-4">
+			<!--begin::List Widget 4-->
+			<div class="card card-xl-stretch mb-5 mb-xl-8">
+				<!--begin::Header-->
+				<div class="card-header border-0 pt-5">
+					<h3 class="card-title align-items-start flex-column">
+						<span class="card-label fw-bolder text-dark">Products</span>
+											<span class="text-muted mt-1 fw-bold fs-7"><a href="{%url 'product_list'%}"> View All Products </a></span>
+					</h3>
+
+				</div>
+				<!--end::Header-->
+				<!--begin::Body-->
+				<div class="card-body pt-5">
+					<!--begin::Item-->
+					<div class="d-flex align-items-sm-center mb-7">
+
+						<!--begin::Section-->
+						<div class="d-flex align-items-center flex-row-fluid flex-wrap">
+							<div class="flex-grow-1 me-2">
+								<a href="#" class="text-gray-800 text-hover-primary fs-6 fw-bolder">Product Name</a>
+								<span class="text-muted fw-bold d-block fs-7">Product Category | Product Unit</span>
+							</div>
+							<span class="badge badge-warning fw-bolder my-2">NRs.255</span>
+						</div>
+						<!--end::Section-->
+					</div>
+					<!--end::Item-->
+				
+				</div>
+				<!--end::Body-->
+			</div>
+			<!--end::List Widget 4-->
+		</div>
+		<!--end::Col-->
+	</div>
+	<!--end::Row-->
+
+</div>
+{%endblock%}

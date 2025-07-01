@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block pagetitle %} Item Sales Report {% endblock %}
+{% block home %} {% url 'bill_list' %} {% endblock %}
+{% block title %} Item Sales Report {% endblock %}
+{% block content %}
+  {% include 'components/title_bar.html' with title='Category wise Sales' subtitle_date="True" %}
+  <div class="card">
+    {% include 'components/search_filter.html' with show_terminal="yes" search_title="Search" export_url="category_wise_sale" object_list="true" sales_type="true" format="xls" %}
+
+    <div class="card-body pt-0">
+      <!--begin::Table-->
+      <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+        {% include 'components/org_header.html' with name="Category Sales Report" %}
+        <div class="table-responsive">
+          <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_customers_table">
+            <!--begin::Table head-->
+            {% if object_list %}
+              <thead>
+                <!--begin::Table row-->
+                <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+                  <th class="min-w-80px sorting" tabindex="0">Category</th>
+                  <th class="min-w-225px sorting" tabindex="0">Name</th>
+                  <th class="min-w-125px sorting" tabindex="0">Unit</th>
+                  <th class="min-w-125px sorting" tabindex="0">Quantity</th>
+                  <th class="min-w-125px sorting" tabindex="0">Rate</th>
+                  <th class="min-w-10px sorting" tabindex="0">Net Amount</th>
+                </tr>
+                <!--end::Table row-->
+              </thead>
+            {% endif %}
+            <tbody class="fw-bold text-gray-600">
+              {% for k, v in data.items %}
+                <tr>
+                  <td class="text-black">{{ k|upper }}</td>
+                </tr>
+                {% for item in v.items %}
+                  <tr class="odd" id="obj-{{ object.pk }}">
+                    <td></td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.unit }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.rate|floatformat:2 }}</td>
+                    <td>{{ item.amount|floatformat:2 }}</td>
+                  </tr>
+                {% endfor %}
+                <tr class="fw-bolder border-top">
+                  <td></td>
+                  <td>Total</td>
+                  <td></td>
+                  <td>{{ v.quantity_total }}</td>
+                  <td></td>
+                  <td>{{ v.amount_total|floatformat:2 }}</td>
+                </tr>
+              {% empty %}
+                {% include 'components/empty.html' with title="Result" %}
+              {% endfor %}
+            </tbody>
+            <!--end::Table body-->
+          </table>
+        </div>
+        {% if object_list %}
+          {% include 'pagination.html' %}
+        {% endif %}
+      </div>
+      <!--end::Table-->
+    </div>
+    <!--end::Card body-->
+  </div>
+
+  <script></script>
+
+{% endblock %}

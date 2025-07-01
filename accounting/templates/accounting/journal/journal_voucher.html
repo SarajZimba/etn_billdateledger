@@ -1,0 +1,93 @@
+{%extends 'base.html'%}
+{% block pagetitle %}Journal Voucher {% endblock %}
+{% load humanize %}
+{% block title %}Journal Voucher {% endblock %}
+
+{% block content %}
+{% include 'components/title_bar.html' with title=' Journal Voucher' %}
+
+<style>
+    input {
+        border: 0;
+        outline: 0;
+        border-bottom: 2px solid rgb(94, 89, 89);
+        width: 100%;
+    }
+
+    input:focus {
+        border-color: rgb(71, 46, 214);
+
+    }
+    td{
+        letter-spacing: 1px;
+    }
+</style>
+
+<div class="card">
+    <div class="card-header p-4 m-auto">
+        <center>
+                <h2>Journal Voucher</h2> <br>
+                <p>Date: ________________</p>
+        </center>
+    </div>
+    <div class="card-body pt-0">
+        <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle table-row-dashed fs-6 gy-5 dataTable no-footer"
+                    id="kt_customers_table">
+
+                    <thead>
+                        <th>Sub Ledger</th>
+                        <th>Particulars</th>
+                        <th>L.F</th>
+                        <th>Debit(Rs)</th>
+                        <th>Credit(Rs)</th>
+                    </thead>
+                    <tbody class="fw-bold text-gray-600">
+                            <div class="row">
+                                {% for dr in debit %}
+                                <tr>
+                                    <td>{{dr.ledger.ledger_name}}</td>
+                                    <td class="col-md-5">{{dr.particulars}}</td>
+                                    <td></td>
+                                    <td class="col-md-2">{{dr.debit_amount| intcomma}}</td>
+                                    <td class="col-md-2">------</td>
+                                </tr>
+                                {% endfor %}
+                            </div>
+
+                            <div class="row">
+                                {% for cr in credit %}
+                                <tr>
+                                    <td>{{cr.ledger.ledger_name}}</td>
+                                    <td class="col-md-5">{{cr.particulars}}</td>
+                                    <td></td>
+                                    <td class="col-md-2">-------</td>
+                                    <td class="col-md-2">{{cr.credit_amount| intcomma}}</td>
+                                </tr>
+                                {% endfor %}
+
+                                <tr>
+                                    <td class="text-primary">Total</td>
+                                    <td class="col-md-5"></td>
+                                    <td></td>
+                                    <td class="col-md-2 fw-bolder text-primary" id="total-debit">{{dr_total| intcomma}}</td>
+                                    <td class="col-md-2 fw-bolder text-primary" id="total-credit">{{cr_total| intcomma}}</td>                        
+                                </tr>
+                            </div>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<a href="{% url 'soft_delete_journal' journal.id%}"><button type="button" class="btn btn-danger my-1 me-12" >Delete</button></a>    
+{% if is_updatable  %}
+<a href="{% url 'edit_journal' journal.id %}">
+    <button type="button" class="btn btn-primary my-1 me-2">Update</button>
+</a>   
+{% endif %}          
+
+
+
+{% endblock %}

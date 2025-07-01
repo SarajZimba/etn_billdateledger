@@ -1,0 +1,45 @@
+{%extends 'base.html'%}
+{% block pagetitle %} Privacy Policy{% endblock %}
+{% block home %}{% url 'org:staticpage_list' %}{% endblock %}
+{% block title %} Static Pages List {% endblock %}
+{% block title_bar %}
+{% include 'components/title_bar.html' with title=object.name pk=object.pk  %}
+{% endblock title_bar %}
+
+{% block content %}
+
+<div class="card card-flush shadow-sm">
+    <div class="card-header">
+        <h3 class="card-title">{{object.name}}</h3>
+        <div class="card-toolbar">
+
+            <a href="{% url 'staticpage_update' object.id%}">
+            <button type="button" class="btn btn-sm btn-primary  me-2">
+                Edit
+            </button></a>
+
+
+        </div>
+    </div>
+    <div class="card-body py-5">
+        {{object.content|safe}}
+    </div>
+    <div class="card-footer">
+        <span class="text-muted fs-7">Updated At: {{object.updated_at}}</span>
+            {%if object.status%}
+				<span class="badge badge-light-success">Published</span>
+            {%else%}
+			<span class="badge badge-light-danger">Draft</span>
+            {%endif%}
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+{%endblock%}

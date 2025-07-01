@@ -1,0 +1,11 @@
+<div class="symbol symbol-50px me-5">
+    {%if image%}
+        <img alt="Pic" src="{{image}}" />
+    {%else%}
+    <span class="symbol-label bg-primary text-inverse-info fw-bolder text-uppercase">{{title|slice:2}}</span>
+    {%endif%}
+</div>
+<div class="d-flex flex-column">
+    <div class="fw-bold d-flex align-items-center fs-5">{{title}}
+    </div>
+</div>

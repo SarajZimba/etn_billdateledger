@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block pagetitle %}Purchase Report{% endblock %}
+{% block title %}Purchased Products by Category{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">{{org.org_name}}</h2>
+    <h1 class="text-center mb-4">{{org.company_address}}</h2>
+    <h2 class="text-center mb-4">Purchased Products Report - {{ date }}</h2>
+
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label for="from_date" class="form-label">From Date:</label>
+            <input type="date" id="from_date" name="from_date" class="form-control" value="{{ request.GET.from_date }}">
+        </div>
+        <div class="col-md-4">
+            <label for="to_date" class="form-label">To Date:</label>
+            <input type="date" id="to_date" name="to_date" class="form-control" value="{{ request.GET.to_date }}">
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
+    </form>
+
+
+    {% if category_data %}
+        {% for category, info in category_data.items %}
+            <div class="mb-4">
+                <h4 class="ms-3 text-primary">Category: {{ category }}</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product Title</th>
+                                <th>Unit</th>
+                                <th>Rate</th>
+                                <th>Total Quantity</th>
+                                <th>Total Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in info.products %}
+                            <tr>
+                                <td>{{ product.product_title }}</td>
+                                <td>{{ product.product_unit }}</td>
+                                <td>{{ product.product_rate }}</td>
+                                <td>{{ product.total_quantity }}</td>
+                                <td>{{ product.total_amount }}</td>
+                            </tr>
+                            {% endfor %}
+                            <!-- Category totals -->
+                            <tr class="fw-bold table-secondary">
+                                <td colspan="3" class="text-end">Category Total:</td>
+                                <td>{{ info.category_total_quantity }}</td>
+                                <td>{{ info.category_total_amount }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endfor %}
+
+        <!-- Grand Totals -->
+        <div class="row mt-5">
+            <div class="col-md-6">
+                <h4 class="mb-3">Grand Totals</h4>
+                <table class="table table-bordered w-100">
+                    <tbody>
+                        <tr class="table-light fw-bold">
+                            <td class="text-end">Total Quantity:</td>
+                            <td>{{ grand_total_quantity }}</td>
+                        </tr>
+                        <tr class="table-light fw-bold">
+                            <td class="text-end">Total Amount:</td>
+                            <td>{{ grand_total_amount }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <p class="text-center text-danger">No purchases found for today.</p>
+    {% endif %}
+</div>
+{% endblock %}

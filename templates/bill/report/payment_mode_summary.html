@@ -1,0 +1,84 @@
+{%extends 'base.html'%}
+{% block pagetitle %}Bill Summary Details{% endblock %}
+{% block home %} {% url 'bill_list' %} {% endblock %}
+{% block title %}Bill Summary Details{% endblock %}
+{% block content %}
+ {% include 'components/title_bar.html' with title='Bill Summary Details' subtitle_date="True"  %}
+                <div class="card">
+
+                {% include 'components/search_filter.html' with show_terminal="yes"  search_title="Search Customer" export_url="payment_mode_summary" object_list="true" format="xls" payment_mode="yes"  %} 
+
+    <div class="card-body pt-0">
+    <!--begin::Table-->
+    <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+      {% include 'components/org_header.html' with name="Bill Summary Details" %}
+      <div class="table-responsive">
+        <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_customers_table">
+          <!--begin::Table head-->
+          {%if object_list%}
+          <thead>
+            <!--begin::Table row-->
+            <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+              <th class="min-w-225px sorting" tabindex="0">Date</th>
+              <th class="min-w-225px sorting" tabindex="0">Invoice Number</th>
+              <th class="min-w-225px sorting" tabindex="0">Customer Name</th>
+              <th class="min-w-125px sorting" tabindex="0">Amount</th>
+              <th class="min-w-125px sorting" tabindex="0">Discount</th>
+              <th class="min-w-10px sorting" tabindex="0">VAT</th>
+              <th class="min-w-10px sorting" tabindex="0">Net Amount</th>
+              <th class="min-w-10px sorting" tabindex="0">Payment Mode</th>
+            </tr>
+            <!--end::Table row-->
+          </thead>
+          {%endif%}
+          <tbody class="fw-bold text-gray-600">
+
+          {% for object in object_list %}
+             <tr class="odd" id="obj-{{object.pk}}">
+                <td>{{object.transaction_date|date:'d/m/Y'}}</td>
+                <td>{{object.invoice_number}}</td>
+                <td>{{object.customer_name}}</td>
+                <td>{{object.sub_total|floatformat:2}}</td>
+                <td>{{object.discount_amount|floatformat:2}}</td>
+                <td>{{object.tax_amount|floatformat:2}}</td>
+                <td>{{object.grand_total|floatformat:2}}</td>
+                {% comment %} <td>{{object.amount|add:object.vat}}</td> {% endcomment %}
+                <td>
+                     {{object.payment_mode}}
+                </td>
+             </tr>
+             {%empty%}
+             {% include 'components/empty.html' with  title="Result"%}
+              {% endfor %}
+
+            {% if object_list %}
+            <tr>
+              <td><h3>Total</h3> </td>
+              <td></td>
+              <td></td>
+              <td><h4>{{total.sub_total|floatformat:2}}</h4> </td>
+              <td><h4>{{total.discount_amount|floatformat:2}}</h4> </td>
+              <td><h4>{{total.tax_amount|floatformat:2}} </h4> </td>
+              <td><h4>{{total.grand_total|floatformat:2}} </h4> </td>
+              <td></td>
+            </tr>
+            {% endif %}
+
+          </tbody>
+          <!--end::Table body-->
+        </table>
+      </div>
+    {%if object_list %}
+      {% include 'pagination.html' %}
+    {%endif%}
+    </div>
+    <!--end::Table-->
+  </div>
+  <!--end::Card body-->
+</div>
+
+<script>
+</script>
+
+{% endblock %}
+

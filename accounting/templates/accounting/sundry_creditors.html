@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block pagetitle %} Sundry Creditors Details {% endblock %}
+{% block home %} {% url 'trial_balance_view' %} {% endblock %}
+{% block title %} Sundry Creditors Details {% endblock %}
+{% block content %}
+{% include 'components/title_bar.html' with title='Sundry Creditors Details' %}
+
+<div class="card p-2 no-print">
+    <a href="#" onclick="goBack()">Return Back</a>
+    <div class="card-body" p-4 m-4>
+        <h1>Account Group : Sundry Creditors</h1>
+    </div>
+</div>
+<style>
+    @media print {
+        .no-print {
+            display: none;
+        }
+    }
+
+    h1.text-center {
+        text-align: center;
+    }
+
+    td {
+        letter-spacing: 1px;
+    }
+</style>
+<div class="card">
+
+    <section class="no-print">
+        {% include 'accounting/filter.html' %}
+    </section>
+
+    <div class="card" id="printTable">
+
+        <h3 class="text-center">Aquaminerals Nepal Private Limited</h3>
+        <h6 class="text-center">Party Ledger Summary - Sundry Creditors </h6>
+        <h6 class="text-primary px-6" style="text-align: right;"> Current Fiscal Year : {{current_fiscal_year}}</h6>
+
+
+        <div class="card-header p-4 m-auto">
+
+            <center>
+
+                {% if from_date and to_date %}
+                <p class="fw-bolder">For the period of {{from_date}} to {{to_date}}</p>
+                {% else %}
+                <p class="fw-bolder">For the period of : {{first_date}} &nbsp; - &nbsp; {{last_date}}</p>
+                {% endif %}
+            </center>
+        </div>
+        <div class="card-body pt-0">
+            <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+                <div class="table-responsive">
+                    <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer"
+                        id="kt_customers_table">
+                        <thead class="fw-bolder">
+                            <tr>
+                                <th>Party Name</th>
+                                {% if openclose %}
+                                <th colspan="2">Opening</th>
+                                {% endif %}
+                                <th>Debit</th>
+                                <th>Credit</th>
+                                {% if openclose %}
+                                <th colspan="2">Closing</th>
+                                {%endif %}
+                            </tr>
+                            {% if openclose %}
+                            <tr>
+                                <th></th>
+                                <th>Debit</th>
+                                <th>Credit</th>
+                                <th></th>
+                                <th></th>
+                                <th>Debit</th>
+                                <th>Credit</th>
+                            </tr>
+                            {% endif %}
+                        </thead>
+                        <tbody class="fw-bolder text-gray-600">
+                            {% for entry in ledger_details %}
+                            <tr>
+                                <td class="fw-bolder">{{entry.ledger_name}}</td>
+                                {% if openclose %}
+                                <td></td>
+                                <td></td>
+                                {% endif %}
+                                <td class="fw-bolder">{{entry.debit_total|intcomma}}</td>
+                                <td class="fw-bolder">{{entry.credit_total|intcomma}}</td>
+                            </tr>
+                            {% endfor %}
+                            <hr>
+                            <tr>
+                                <td>Total</td>
+                                {% if openclose %}
+                                <td></td>
+                                <td></td>
+                                {% endif %}
+                                <td>
+                                    <p class="fw-bolder text-primary">{{total_d|intcomma}}</p>
+                                </td>
+                                <td>
+                                    <p class="fw-bolder text-primary">{{total_c|intcomma}}</p>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Balance</td>
+                                {% if openclose %}
+                                <td></td>
+                                <td></td>
+                                {% endif %}
+                                {% if c == 1 %}
+                                <td>
+                                    <p class="fw-bolder text-success">{{balance|intcomma}}</p>
+                                </td>
+                                {% endif %}
+                                {% if c == 0 %}
+                                <td>
+                                    <p class="fw-bolder text-danger">{{balance|intcomma}}</p>
+                                </td>
+                                {% endif %}
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% if object_list %}
+                {% include 'pagination.html' %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<button type="button" class="btn btn-success my-1 me-12" onclick="printTable('printTable');">Print</button>
+
+<script type="text/javascript">
+    function printTable(tableId) {
+        var printContents = document.getElementById(tableId).innerHTML;
+        var originalContents = document.body.innerHTML;
+
+        // Hide elements with the 'no-print' class
+        var noPrintElements = document.querySelectorAll('.no-print');
+        for (var i = 0; i < noPrintElements.length; i++) {
+            noPrintElements[i].style.display = 'none';
+        }
+
+        // Set the HTML content to print
+        document.body.innerHTML = printContents;
+
+        // Print the table
+        window.print();
+
+        // Restore the original content and show hidden elements
+        document.body.innerHTML = originalContents;
+        for (var i = 0; i < noPrintElements.length; i++) {
+            noPrintElements[i].style.display = 'block';
+        }
+    }
+
+    function goBack() {
+        window.history.back()
+    }
+</script>
+{% endblock %}

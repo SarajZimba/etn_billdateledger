@@ -1,0 +1,120 @@
+{%extends 'base.html'%} {%load static%} {%block title%} Create {%endblock%}
+{%block content %}
+<div class="card p-2">
+
+<div class="card-body p-4 m-4">
+
+  <h1>{% if title %} {{title}} {% else %} Create {% endif %}</h1>
+    <form class="" enctype="multipart/form-data" method="POST">
+      <div class="row">
+         {% for field in form.visible_fields %}
+
+         <!-- {{field.field.widget.input_type}} -->
+         {% if field.field.widget.input_type == "text" or field.field.widget.input_type == "number" or field.field.widget.input_type == "datetime-local" or field.field.widget.input_type == "url" or field.field.widget.input_type == "email" or field.field.widget.input_type == "date" %}
+         <div class="col-md-6 fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+
+         {% elif field.field.widget.input_type == "textarea" or field.field.widget.input_type == "checkbox" %}
+                <div class="col-md-12 fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+          {% else %}
+                  <div id="div-{{field.auto_id}}">
+          {% endif %}
+            <p class="form-group">
+                  {% if field.field.widget.input_type == "checkbox" %}
+                  <label class="form-check form-switch form-check-custom form-check-solid">
+                        {{field}}
+                      <span class="form-check-label fw-bold text-muted" for="kt_modal_add_customer_billing">
+                        {{field.label}}
+                      </span>
+                    </label>
+                  {% else %}
+                  <label for="{{field.auto_id}}">{{field.label}}</label>
+                  {{field}}
+                  <div class="fv-plugins-message-container invalid-feedback"><div data-field="daterangepicker_input"> {{field.errors}} </div></div>
+                  {% endif %}
+                  </p>
+                  </div>
+                    {% endfor %}
+          </div>
+
+
+    {% csrf_token %}
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+
+  </div>
+</div>
+
+
+<script>
+
+  window.addEventListener('load', (event) => {
+    hide();
+  })
+
+let productDiv = document.getElementById("div-id_products")
+let categoryDiv = document.getElementById("div-id_category")
+let brandDiv = document.getElementById("div-id_brands")
+let mechantDiv = document.getElementById("div-id_merchant")
+
+
+let product = document.getElementById("id_products")
+let category = document.getElementById("id_category")
+let brand = document.getElementById("id_brands")
+let mechant = document.getElementById("id_merchant")
+
+
+let all = [(productDiv,product), (categoryDiv,category), (brandDiv,brand), (mechantDiv,mechant)]
+
+const hide = () => {
+  // all.map((item) => {
+  //   item[0].style.display = "none"
+  //   item[1].value = ""
+  //   item[1].required = false
+  // })
+  productDiv.style.display = "none";
+  categoryDiv.style.display = "none";
+  brandDiv.style.display = "none";
+  mechantDiv.style.display = "none";
+
+  product.value = "";
+  category.value = "";
+  brand.value = "";
+  mechant.value = "";
+
+  product.required = false
+  category.required = false
+  brand.required = false
+  mechant.required = false
+
+}
+
+validTo.addEventListener("change", (event) => {
+  hide();
+
+  if (validTo.value == "p"){
+    productDiv.style.display = "block"
+    product.required = true
+  }
+
+  if (validTo.value == "c"){
+    categoryDiv.style.display = "block"
+    category.required = true
+  }
+
+  if (validTo.value == "b"){
+    brandDiv.style.display = "block"
+    brand.required = true
+  }
+
+  if (validTo.value == "m"){
+    mechantDiv.style.display = "block"
+    mechant.required = true
+  }
+
+});
+
+</script>
+
+{% comment %} {% include 'select2.html' %} {% endcomment %}
+{% endblock %}

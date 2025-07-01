@@ -1,0 +1,55 @@
+{%extends 'base.html'%}
+{% load humanize %}
+{% block pagetitle %} Journal Entries {% endblock %}
+{% block home %} {% url 'journal_list' %} {% endblock %}
+{% block title %} Journal {% endblock %}
+{% block content %}
+{% include 'components/title_bar.html' with title=' Journal Entries ' %}
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-danger col-12" role="alert">
+            {{message}}
+        </div>
+    {% endfor %}
+{% endif %}
+<div class="card">
+    {% include 'components/search_filter.html' with show_terminal="yes" search_title="Search Journal" create_button="Create Journal" create_url="journal_create" %}
+    <div class="card-body pt-0">
+        <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+            <div class="table-responsive">
+                <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer"
+                    id="kt_customers_table">
+
+
+                    <thead>
+                        <th>S.N</th>
+                        <th>Created By</th>
+                        <th>Created Date</th>
+                        <th>Total Amount</th>
+                        <th>Action</th>
+                    </thead>
+                    <tbody class="fw-bold text-gray-600">
+                        {% for entry in journal_entries %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>{{entry.employee_name}}</td>
+                            <td>{{entry.created_at}}</td>
+                            <td>{{entry.journal_total| intcomma}}</td>
+                            <td><a href="{% url 'journal_detail' entry.pk %}"><span class="badge badge-success">View</span></a></td>
+                        </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+            {%if object_list%}
+            {% include 'pagination.html' %}
+            {%endif%}
+        </div>
+    </div>
+</div>
+
+<script>
+</script>
+
+{% endblock %}

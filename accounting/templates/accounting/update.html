@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- <div class="float-start text-black mb-5 " style="font-size: 18px; background-color: #f0f0f0;">Update</div> -->
+<div><a href="#" onclick="goBack()" class="btn btn-danger float-end">Back</a></div>
+<h1>{% if title %} {{title}} {% else %} Update {% endif %}</h1>
+
+
+  <div class="card-body p-4 m-4">
+    <div class="card-body m-1 d-flex w-100">
+    Opening Count : &nbsp;<b>{{opening_count}}</b>&nbsp;&nbsp;
+
+    <a href="{% url 'edit_opening_count' object.id%}">Edit</a>
+  </div>
+
+
+  <form method="post" enctype="multipart/form-data" onsubmit="disableSubmitButton()">
+    {% csrf_token %}
+    <!-- <div class="bg-secondary p-3 rounded">
+    {{ form.as_p }}
+    </div> -->
+    {{ form.non_field_errors }}
+    
+    {% for field in form %}
+      <div style="padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+        {{ field.label_tag }}
+        {{ field }}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <button type="submit" id="submit" class="btn btn-primary">Update</button>
+    {% if no_transaction_exists %}
+    <a href="{% url 'accountledger_delete' object.id %}"><button type="button" class="btn btn-danger my-2 me-12" >Delete</button></a>
+    {% endif %}
+  </form>
+
+
+</div>
+  <script>
+    function disableSubmitButton() {
+      document.getElementById("submit").disabled = true;
+      document.getElementById("submit").innerText = "Updating...";
+    }
+    function goBack() {
+      window.history.back();
+    }
+  </script>
+{% endblock %}

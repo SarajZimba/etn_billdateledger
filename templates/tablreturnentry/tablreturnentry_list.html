@@ -1,0 +1,102 @@
+{%extends 'base.html'%}
+{% load tags %}
+{% block pagetitle %}Bill Return List {% endblock %}
+{% block home %} {% url 'tablreturnentry_list' %} {% endblock %}
+{% block title %}Bill Return List {% endblock %}
+{% block content %}
+ {% include 'components/title_bar.html' with title='Bill Return List'  %}
+                <div class="card">
+
+                {% include 'components/search_filter.html' with  search_title="Search Bill Return" export_url="tablreturnentry_list" object_list="true" format="xls" %} 
+
+
+    <div class="card-body pt-0">
+    <!--begin::Table-->
+    <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+      <div class="table-responsive">
+        <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_customers_table">
+          <!--begin::Table head-->
+          {%if return_entry %}
+          <thead>
+            <!--begin::Table row-->
+            <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+
+              <th class="min-w-25px sorting" tabindex="0" >SID</th>
+              {% comment %} <th class="min-w-125px sorting" tabindex="0" >Bill Date</th> {% endcomment %}
+              <th class="min-w-125px sorting" tabindex="0" > Miti</th>
+
+              <th class="min-w-125px sorting" tabindex="0" > Bill No</th>
+              <th class="min-w-100px sorting" tabindex="0" > C.Name</th>
+              <th class="min-w-125px sorting" tabindex="0" > C.PAN</th>
+              <th class="min-w-50px sorting" tabindex="0" > Amount</th>
+              {% comment %} <th class="min-w-50px sorting" tabindex="0" >N.Tax Sales</th>
+              <th class="min-w-50px sorting" tabindex="0" > Zero Tax Sales</th> {% endcomment %}
+              <th class="min-w-50px sorting" tabindex="0" > Taxable Amount</th>
+              <th class="min-w-50px sorting" tabindex="0" > Tax Amount</th>
+              {% comment %} <th class="min-w-50px sorting" tabindex="0" > Serviced Item</th>
+              <th class="min-w-50px sorting" tabindex="0" > Quantity</th> {% endcomment %}
+              <th class="min-w-50px sorting" tabindex="0" > Reason</th>
+
+            </tr>
+            <!--end::Table row-->
+          </thead>
+          {%endif%}
+          <tbody class="fw-bold text-gray-600">
+
+          {% for object in return_entry %}
+             <tr class="odd" id="obj-{{object.pk}}">
+                <td>{{object.idtblreturnEntry}}</td>
+                {% comment %} <td>{{object.bill_date|replace_dash_with_dot}}</td> {% endcomment %}
+                <td>{{object.miti}}</td>
+                <td>{{object.bill_no}}</td>
+                <td>{{object.customer_name}}</td>
+                <td>{{object.customer_pan}}</td>
+                <td>{{object.amount}}</td>
+                {% comment %} <td>{{object.NoTaxSales}}</td>
+                <td>{{object.ZeroTaxSales}}</td> {% endcomment %}
+                <td>{{object.taxable_amount}}</td>
+                <td>{{object.tax_amount}}</td>
+                {% comment %} <td>{{object.ServicedItem}}</td>
+                <td>{{object.quantity}}</td> {% endcomment %}
+                <td>{{object.reason}}</td>
+             </tr>
+             {%empty%}
+             {% include 'components/empty.html' with  title="TablReturnEntry"%}
+              {% endfor %}
+              {% if return_entry %}
+                <tr>
+                   <td>Total</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                   <td>{{total_return_amount | floatformat:2}}</td>
+                   {% comment %} <td>{{total_no_tax_return | floatformat:2}}</td>
+                   <td>{{export_at_zero_rate_return | floatformat:2}}</td> {% endcomment %}
+                   <td>{{total_taxable_return_amount | floatformat:2}}</td>
+                   <td>{{total_return_tax_amount | floatformat:2}}</td>
+                   <td></td>
+                   <td></td>
+                   <td></td>
+                   {% comment %} <td>{{return_exempted_sales | floatformat:2}}</td> {% endcomment %}
+                </tr>
+              {% endif %}
+
+          </tbody>
+          <!--end::Table body-->
+        </table>
+      </div>
+    {%if return_entry%}
+      {% include 'pagination.html' %}
+    {%endif%}
+    </div>
+    <!--end::Table-->
+  </div>
+  <!--end::Card body-->
+</div>
+
+<script>
+</script>
+
+{% endblock %}
+

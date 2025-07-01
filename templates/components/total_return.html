@@ -1,0 +1,15 @@
+
+<tr>
+   <td>Total</td>
+   {% for i in before_td %}
+      <td></td>
+   {% endfor %}
+   <td>{{total_return_amount | floatformat:2}}</td>
+   <td>{{total_no_tax_return | floatformat:2}}</td>
+   <td>{{export_at_zero_rate_return | floatformat:2}}</td>
+   <td>{{total_taxable_return_amount | floatformat:2}}</td>
+   <td>{{total_return_tax_amount | floatformat:2}}</td>
+   <td></td>
+   <td></td>
+   <td>{{return_exempted_sales | floatformat:2}}</td>
+</tr>

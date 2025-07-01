@@ -1,0 +1,18 @@
+{%extends 'base.html'%}
+{% load humanize %}
+{% block pagetitle %} P&L Statement {% endblock %}
+{% block home %} {% url 'trial_balance_view' %} {% endblock %}
+{% block title %} Edit Opening Count {% endblock %}
+{% block content %}
+{% include 'components/title_bar.html' with title=' Edit Opening Count' %}
+<div><b>Ledger : {{ledger_name}}</b></div>
+<br>
+Present Opening Count : <b>{{opening_count}}</b>
+
+<form method="post">
+    {% csrf_token %}
+    {{form.as_p}}
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+{% endblock %}

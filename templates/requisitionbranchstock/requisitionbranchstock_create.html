@@ -1,0 +1,167 @@
+{%extends 'base.html'%} {%load static%} {%block title%} Create {%endblock%}
+{%block content %}
+<div class="card p-2">
+
+    {% for message in messages %}
+        <div class="alert alert-danger" role="alert">
+            {{message}}
+        </div>
+    {% endfor %}
+
+    <div class="card-body p-4 m-4">
+        <div class="d-flex justify-content-between">
+            <h1>{% if title %} {{title}} {% else %} Create {% endif %}</h1>
+        </div>
+        <form id="req-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="">Select Branch</label>
+                {{form.branch}}
+            </div>
+            <br>
+
+            <div class="form-group">
+                <label for="">Item Name</label>
+                {{form.product}}
+            </div>
+            <br>
+            <div class="form-group col-md-6">
+                <label for="">Produced Quantity</label>
+                {{form.quantity}}
+            </div>
+            <br>
+
+            <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+        <div class="row mt-4">
+            <table class="table table-striped w-100">
+                <thead>
+                    <tr class="fw-bolder">
+                        <th>Branch Name</th>
+                        <th>Item Name</th>
+                        <th>Quantity</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="req-table-body">
+
+                </tbody>
+                
+            </table>
+            <div class="row col-md-3" id="save-btn-row">
+                <form method="POST" id="submit-form">
+                    {% csrf_token %}
+                    <button class="btn btn-success">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    let formElement = document.getElementById('req-form')
+    let submitForm = document.getElementById('submit-form')
+
+    let saveBtn = document.getElementById('save-btn-row')
+    saveBtn.style.display = 'none'
+    let tbody = document.getElementById('req-table-body')
+
+    let selectedItems = []
+
+
+    function checkButtonDisplay(){
+        if(Object.keys(selectedItems).length === 0){
+            saveBtn.style.display = 'none'
+        }else{
+            saveBtn.style.display = 'block'
+
+        }
+    }
+
+    function deleteBtnClick(e){
+       let id = e.target.id.split('_')
+       selectedItems =  selectedItems.filter(item => item.product_id != id[1])
+       document.getElementById(`${id[0]}_${id[1]}_tr`).remove()
+       checkButtonDisplay()
+    }
+    
+    function createRow(branch,product, quantity, productId, branchId){
+        let row = document.createElement('tr');
+        row.setAttribute('id', `${branchId}_${productId}_tr`);
+        let branchTd = document.createElement('td');
+        let productTd = document.createElement('td');
+        let quantityTd = document.createElement('td');
+        let buttonTd = document.createElement('td');
+
+        const btn = `
+        <button class="btn btn-danger btn-sm" onclick="deleteBtnClick(event)" id="${branchId}_${productId}_btn">X</button>
+        `
+        buttonTd.innerHTML = btn
+        branchTd.innerHTML = branch
+        productTd.innerHTML = product
+        quantityTd.innerHTML= quantity
+        row.appendChild(branchTd)
+        row.appendChild(productTd)
+        row.appendChild(quantityTd)
+        row.appendChild(buttonTd)
+        tbody.appendChild(row)
+        checkButtonDisplay()
+    }
+
+    formElement.addEventListener('submit', (e)=>{
+        e.preventDefault()
+        var data = new FormData(formElement);
+        let product = $("#id_product").select2('data')
+        let branch = $("#id_branch option:selected").text()
+
+        const values = Object.fromEntries(data.entries());
+
+        let productId = values.product
+        let branchId = values.branch
+        selectedItems.push({branch_id:branchId, product_id:productId, quantity:values.quantity})
+        createRow(branch,product[0].text,values.quantity, productId, branchId)
+        $("#id_product").select2({
+            placeholder: "Select new Item"
+        })
+
+        checkButtonDisplay()
+    })
+
+
+    submitForm.addEventListener('submit', (e)=>{
+        e.preventDefault()
+        $.ajaxSetup({
+        headers: { "X-CSRFToken": '{{csrf_token}}' }
+      });
+
+      $.ajax({
+        url: `/api/bulk-requisition/`,
+        type: 'POST',
+        data:{'data':JSON.stringify(selectedItems)},
+        success: function (result) {
+            Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Products have been issued',
+            showConfirmButton: false,
+            timer: 1000
+            })
+        },
+        error: function(result){
+            Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Something went wrong!'
+            })
+        }
+      });
+
+    })
+
+</script>
+
+
+
+{% endblock %}

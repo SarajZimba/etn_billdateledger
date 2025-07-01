@@ -1,0 +1,53 @@
+{%extends 'base.html'%}
+{% block pagetitle %}Info Page List {% endblock %}
+{% block title_bar %}
+{% include 'components/title_bar.html' with title="Information Pages" create="/create/"  %}
+{% endblock title_bar %}
+{% block content %}
+{%if object_list%}
+{% include 'components/search_bar.html' %}
+{%endif%}
+<div class="row g-6 mb-6 g-xl-9 mb-xl-9">
+
+{%for object in object_list%}
+<div class="col-md-4" id="obj-{{object.pk}}">
+    <div class="card mb-4">
+    <div class="card-body p-4">
+        <div class="ps-lg-6 mb-16 mt-md-0 mt-17">
+            <!--begin::Body-->
+            <div class="mb-6">
+                <!--begin::Title-->
+                <a href="{%url 'org:staticpage_detail' object.pk%}" class="fw-bolder text-dark mb-4 fs-2 lh-base text-hover-primary">{{object.name}}</a>
+                <!--end::Title-->
+                <!--begin::Text-->
+                <div class="fw-bold fs-5 mt-4 text-gray-600 text-dark">{{object.content|truncatechars:250}}</div>
+                <!--end::Text-->
+            </div>
+            <!--end::Body-->
+            <!--begin::Footer-->
+            <div class="d-flex flex-stack flex-wrap">
+                <!--begin::Item-->
+                <div class="d-flex align-items-center pe-2">
+                <!--begin::Text-->
+                <div class="fs-5 fw-bolder">
+                    <span class="text-muted">{{object.updated_at|date:"M d, Y"}}</span>
+                </div>
+                <!--end::Text-->
+                </div>
+                <!--end::Item-->
+                <!--begin::Label-->
+                {%include 'components/status.html' with object=object.status%}
+                  <a onclick="remove({{object.pk}},'{% url "org:staticpage_delete" %}','{{object.name}}',)" class="menu-link px-3 text-danger" id="obj"
+                              data-kt-customer-table-filter="delete_row">Delete</a>
+                <!--end::Label-->
+            </div>
+            <!--end::Footer-->
+        </div>
+    </div>
+    </div>
+</div>
+{%empty%}
+{% include 'components/empty.html' with title="Page" %}
+{%endfor%}
+</div>
+{% endblock %}

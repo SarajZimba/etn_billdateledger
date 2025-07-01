@@ -1,0 +1,44 @@
+{%extends 'base.html'%}
+{% load humanize %}
+{% block pagetitle %} P&L Statement {% endblock %}
+{% block home %} {% url 'trial_balance_view' %} {% endblock %}
+{% block title %} Party Ledgers {% endblock %}
+{% block content %}
+{% include 'components/title_bar.html' with title=' Party Ledgers' %}
+
+<div class="card p-2">
+    
+    <div class="card-body p-4 m-4">
+        <h1>Party Ledger List</h1>
+        <form method="get">
+            <div class="col-md-12">
+                <input type="text" class="form-control" id="search-ledger" name="ledger_search" placeholder="Search Ledger">
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Search</button>
+        </form>
+        <a href="{% url 'sundry_debtors_ledgers' %}"><button class="btn btn-success mt-3">View Sundry Debtors</button></a>
+        <a href="{% url 'sundry_creditors_ledgers' %}"><button class="btn btn-danger mt-3">View Sundry Creditors</button></a>
+        <ul class="pt-3">
+            {% for ledger in ledgers %}
+            <a href="{% url 'ledger_detail' ledger.id %}" style="color: black;"><li><h6>{{ ledger.ledger_name }}</h6></li></a>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<script>
+
+
+    $(document).ready(function() {
+        $('#search-ledger').select2({
+            placeholder: 'Search Ledgers',
+            data: {% autoescape off %}{{ ledger_names|safe }}{% endautoescape %}
+        });
+
+        $('#search-ledger').on('select2:select', function(e) {
+            // Handle the selected ledger here
+        });
+    });
+</script>
+    
+{% endblock %}

@@ -1,0 +1,55 @@
+{%extends 'base.html'%}
+{% load humanize %}
+{% block pagetitle %} Depreciation {% endblock %}
+
+{% block title %} Depreciation {% endblock %}
+{% block content %}
+{% include 'components/title_bar.html' with title=' Depreciation ' %}
+<div class="card">
+    {% include 'components/search_filter.html' with show_terminal="yes" search_title="Search Depreciation" %}
+    <div class="card-body pt-0">
+        <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+            <div class="table-responsive">
+                <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer"
+                    id="kt_customers_table">
+
+
+                    <thead>
+                        <th>S.N</th>
+                        <th>Date Of Purchase</th>
+                        <th>Miti (purchase)</th>
+                        <th class="fw-bolder">Item Name</th>
+                        <th>Purchase Price</th>
+                        <th>Pool (%)</th>
+                        <th>Depn Amount</th>
+                        <th>Value</th>
+
+                    </thead>
+                    <tbody class="fw-bold text-gray-600">
+                        {% for depn in depreciations %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>{{depn.item.asset_purchase.bill_date}}</td>
+                            <td>{{depn.miti}}</td>
+                            <td class="fw-bolder">{{depn.item.asset.title}}</td>
+                            <td>{{depn.item.item_total}}</td>
+                            <td>{{depn.item.asset.depreciation_pool.percentage}} %</td>
+                            <td>{{depn.depreciation_amount}}</td>
+                            <td>{{depn.net_amount}}</td>
+                        </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+            {%if object_list%}
+            {% include 'pagination.html' %}
+            {%endif%}
+        </div>
+    </div>
+</div>
+
+<script>
+</script>
+
+{% endblock %}

@@ -1,0 +1,145 @@
+<div class="page card mb-4" id="{{id}}">
+    <!-- begin::Body-->
+    <div class="card-body" >
+       <!-- begin::Wrapper-->
+       <div class="mw-lg-950px mx-auto w-100">
+          <center >
+             <h2>
+                {{organization.org_name}}  
+             </h2>
+             {{organization.company_address}} | Phone Number:  {{organization.company_contact_number}}<br>
+             PAN: {{organization.tax_number}} 
+             <hr>
+             <h5> 
+                {% if not object.status %}
+                Purchase Return
+                {% else %}
+                  Purchase Invoice
+                {% endif %}
+             </h5>
+             <br>
+          </center>
+          <!-- begin::Header-->
+          <div class="row mb-4">
+             <div class="col">
+                Invoice Number: <strong>  {{object.bill_no}} </strong><br>
+                Transaction Date: <strong>  {{object.bill_date|date:"Y.m.d"}} </strong><br>
+                Invoice Issue Date: <strong>  {{object.bill_date|date:"Y.m.d"}} </strong><br>
+             </div>
+             <div class=" col text-end ">
+                Vendor Name : <strong>  {{object.vendor.name}} </strong><br>
+                Vendor PAN : <strong>  {{object.vendor.pan_no}} </strong><br>
+                Vendor Address: <strong>  {{object.vendor.address}} </strong>
+             </div>
+             <!--end::Logo-->
+          </div>
+          <!--end::Header-->
+          <!--begin::Body-->
+          <div class=" pb-0">
+             <!--begin::Wrapper-->
+             <div class="d-flex justify-content-between flex-column flex-md-row">
+                <!--begin::Content-->
+                <div class="flex-grow-1 mb-13">
+                   <!--begin::Table-->
+                   <div class="table-responsive border-bottom mb-14">
+                      <table class="table">
+                         <thead>
+                            <tr class="border-bottom fs-6 fw-bolder text-muted text-uppercase">
+                               <th class="fs-7 pb-2" style="border-color: black;">Item</th>
+                               <th class="fs-7 min-w-20px pb-2 text-end" style="border-color: black;">QTY</th>
+                               <th class="fs-7 min-w-50px pb-2 text-end" style="border-color: black;">Unit</th>
+                               <th class="fs-7 min-w-80px pb-2 text-end" style="border-color: black;">Rate</th>
+                               <th class="fs-7 min-w-100px pe-lg-6 pb-2 text-end" style="border-color: black;">Amount</th>
+                            </tr>
+                         </thead>
+                         <tbody>
+                            {%for item in object.productpurchase_set.all%}
+                            <tr class="fw-bolder text-gray-700 text-end">
+                               <td style="font-size: 10px;" class="d-flex align-items-center pt-1">{{item.product.title}}</td>
+                               <td style="font-size: 10px;" class="pt-1">{{item.quantity}}</td>
+                               <td style="font-size: 10px;" class="pt-1">{{item.product.unit}}</td>
+                               <td style="font-size: 10px;" class="pt-1">Rs.{{item.rate}}  </td>
+                               <td style="font-size: 10px;" class="pt-1 pe-lg-6 text-dark fw-boldest text-end">Rs. {{item.item_total|floatformat:2}}</td>
+                            </tr>
+                            {%endfor%}
+                            <tr>
+                               <td></td>
+                               <td></td>
+                               <td></td>
+                               <td class="text-end p-0 pt-5"><strong > Sub Total </strong></td>
+                               <td class="text-end p-0 pt-5">{{object.sub_total|floatformat:2}}</td>
+                            </tr>
+                            <tr >
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td class="text-end p-0"><strong> Discount % </strong></td>
+                              <td class="text-end p-0">{{object.discount_percentage}} %</td>
+                           </tr>
+                            <tr >
+                               <td></td>
+                               <td></td>
+                               <td></td>
+                               <td class="text-end p-0"><strong> Discount </strong></td>
+                               <td class="text-end p-0">{{object.discount_amount|floatformat:2}}</td>
+                            </tr>
+                            <tr >
+                               <td></td>
+                               <td></td>
+                               <td></td>
+                               <td class="text-end p-0"><strong> Excise Duty (5%) </strong></td>
+                               <td class="text-end p-0">{{object.excise_duty_amount|floatformat:2}}</td>
+                            </tr>
+                            <tr >
+                               <td></td>
+                               <td></td>
+                               <td></td>
+                               <td class="text-end p-0"><strong> Taxable Amount </strong></td>
+                               <td class="text-end p-0">{{object.taxable_amount|floatformat:2}}</td>
+                            </tr>
+                            <tr >
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td class="text-end p-0"><strong>Non Taxable Amount </strong></td>
+                              <td class="text-end p-0">{{object.non_taxable_amount|floatformat:2}}</td>
+                           </tr>
+                            <tr >
+                               <td></td>
+                               <td></td>
+                               <td></td>
+                               <td class="text-end p-0"><strong> VAT (13%) </strong></td>
+                               <td class="text-end p-0">{{object.tax_amount|floatformat:2}}</td>
+                            </tr>
+                            <tr >
+                               <td></td>
+                               <td></td>
+                               <td></td>
+                               <td class="text-end p-0 pt-2">
+                                  <h5>  Grand Total </h5>
+                               </td>
+                               <td class="text-end p-0 pt-2"> <strong >{{object.grand_total|floatformat:2}} </strong></td>
+                            </tr>
+                         </tbody>
+                      </table>
+                      <p class="text-end"> In Words:  {{object.amount_in_words}}</p>
+                      <p class="text-end">  Mode: {{object.payment_mode}}</p>
+                      {% if reason %}
+                         <p class="text-end">  Reason: {{reason}}</p>
+                      {% endif %}
+                   </div>
+ 
+                   <!--end::Table-->
+                </div>
+                <!--end::Content-->
+ 
+                <!--begin::Content-->
+             </div>
+             <!--end::Wrapper-->
+          </div>
+          <!--end::Body-->
+       </div>
+       <!-- end::Wrapper-->
+    </div>
+    <!-- end::Body-->
+ </div>

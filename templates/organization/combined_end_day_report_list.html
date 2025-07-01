@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<htmllang="en">
+  <head>
+    <metacharset="UTF-8"/>
+    <title>End Day Report</title>
+    <style>
+        table, th, td {
+          border: 1px solid rgb(117, 114, 114);
+          border-collapse: collapse;
+          font-family: Roboto;
+          padding:5px;
+        }
+        
+        table th {
+            background-color:rgb(229, 200, 74);;
+        }
+        </style>
+  </head>
+  <body>
+    <h3>Here is the summary report for today</h3>
+    <p>{{combine_data.org_name}}</p>
+    <p>Date: {{combine_data.date_now}}</p>
+    <p>Conducted at: {{combine_data.time_now}}</p>
+
+    <h4>Grand Total For All Terminals</h4>
+    <table>
+        <tr>
+            <th>Total Sale</th>
+            <td>{{ combine_data.total_sale }}</td>
+        </tr>
+        <tr>
+            <th>Net Sales</th>
+            <td>{{ combine_data.net_sales }}</td>
+        </tr>
+        <tr>
+            <th>Total Cash</th>
+            <td>{{ combine_data.total_cash }}</td>
+        </tr>
+        <tr>
+            <th>Total Credit</th>
+            <td>{{ combine_data.total_credit }}</td>
+        </tr>
+        <tr>
+            <th>Total Credit Card</th>
+            <td>{{ combine_data.total_credit_card }}</td>
+        </tr>
+        <tr>
+            <th>Total Complimentary</th>
+            <td>{{ combine_data.total_complimentary }}</td>
+        </tr>
+        <!--<tr>-->
+        <!--    <th>Total Mobile</th>-->
+        <!--    <td>{{ combine_data.total_discounts }}</td>-->
+        <!--</tr>-->
+        <tr>
+            <th>Total Discounts</th>
+            <td>{{ combine_data.total_discounts }}</td>
+        </tr>
+        <tr>
+            <th colspan="1">Total Mobile Payments</th>
+             <td>{{ combine_data.total_mobile_payment }}</td> 
+             {% for key, value in combine_data.combined_mobile_payment.items%}
+             <tr>
+             <th>{{key}}</th>
+             <td>{{value}}</td>
+            </tr>
+             {%endfor%}
+        </tr>
+    </table>
+
+    <h1>Terminal Data</h1>
+    {% for terminal in terminals_data %}
+    <h3>Terminal : {{terminal.terminal}}</h3>
+    <table>
+        <tbody>
+            <tr>
+                <th>Branch</th>
+                <td>{{terminal.branch}}</td>
+            </tr>
+
+            <tr>
+                <th>Terminal</th>
+                <td>{{terminal.terminal}}</td>
+            </tr>
+
+            <tr>
+                <th>DateTime</th>
+                <td>{{terminal.date_time}}</td>
+            </tr>
+
+            <tr>
+                <th>Total Sale</th>
+                <td>{{terminal.total_sale}}</td>
+            </tr>
+            
+            <tr>
+                <th>Net Sales</th>
+                <td>{{terminal.net_sales}}</td>
+            </tr>
+
+            <tr>
+                <th>VAT</th>
+                <td>{{terminal.vat}}</td>
+            </tr>
+            
+            <tr>
+                <th>Cash</th>
+                <td>{{terminal.cash}}</td>
+            </tr>
+
+            <tr>
+                <th>Credit Card</th>
+                <td>{{terminal.credit_card}}</td>
+            </tr>
+            <!-- <tr>
+                <th>Mobile Payment</th>
+                <td>{{terminal.mobile_payment}}</td>
+            </tr> -->
+            <tr>
+                <th>Mobile Payment</th>
+                <td>{{terminal.mobile_payment}}</td>
+                <tr>
+                <td colspan="2">
+                    <table colspan="2">
+
+                {% for formatted_mobile_payment in terminal.formatted_mobile_payment %}
+                <tr colspan="2">
+                    <th colspan="1">{{ formatted_mobile_payment.type }}</th>
+                    <td colspan="1">{{ formatted_mobile_payment.total }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            </td>
+
+                </tr>
+            </tr>
+            <tr>
+                <th>Credit</th>
+                <td>{{terminal.credit}}</td>
+            </tr>
+
+            <tr>
+                <th>Complimentary</th>
+                <td>{{terminal.complimentary}}</td>
+            </tr>
+            <tr>
+                <th>Total Discount</th>
+                <td>{{terminal.total_discounts}}</td>
+            </tr>
+            <tr>
+                <th>No of Guests</th>
+                <td>{{terminal.no_of_guest}}</td>
+            </tr>
+            <tr>
+                <th>Start Bill</th>
+                <td>{{terminal.start_bill}}</td>
+            </tr>
+            <tr>
+                <th>End Bill</th>
+                <td>{{terminal.end_bill}}</td>
+            </tr>
+            <tr>
+                <th>Total Transactions</th>
+                <td>{{terminal.total_transactions}}</td>
+            </tr>
+            <tr>
+                <th>Total Void Count</th>
+                <td>{{terminal.total_void_count}}</td>
+            </tr>
+            <tr>
+                <th>Employee Name</th>
+                <td>{{terminal.employee_name}}</td>
+            </tr>
+            
+        </tbody>
+    </table>
+
+        <h4>Credit Details</h4>
+        <table>
+        <tr><td>Billno</td>
+        <td>Party</td>
+        <td>Amount</td></tr>
+        <!--Inside your table body -->
+        {% for customer_name, data in terminal.grouped_bills.items %}
+            <tr>
+                <td colspan="3"><strong>{{ customer_name }}</strong></td>
+            </tr>
+            
+            {% for bill_data in data.bills_data %}
+                <tr>
+                    <td>{{ bill_data.invoice_number }}</td>
+                    <td>{{ bill_data.customer_name }}</td>
+                    <td>{{ bill_data.grand_total }}</td>
+                </tr>
+            {% endfor %}
+            
+            <tr>
+                <td colspan="2"><strong>Total</strong></td>
+                <td>{{ data.total_amount }}</td>
+            </tr>
+        {% endfor %}
+        
+    </table>
+    {% endfor %}
+  </body>
+</html>

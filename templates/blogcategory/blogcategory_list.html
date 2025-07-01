@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+{% include 'components/title_bar.html' with title="Blog Categories" create="/create/"  %}
+
+{%if object_list%}
+{% include 'components/search_bar.html' %}
+{%endif%}
+<div class="row g-6 g-xl-9">
+
+{%for object in object_list%}
+
+<div class="col-md-6 col-xl-4" id="obj-{{object.pk}}">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{{object.name|truncatechars:30}}</h5>
+            <p class="card-text">{{object.description}}</p>
+            <a href="{%url 'blog:blogcategory_update' object.pk%}" class="btn btn-sm text-info ">Update</a>
+  <a  onclick="remove({{object.pk}},'{% url "blog:blogcategory_delete" %}','{{object.name}}',)" class="menu-link px-3 text-danger" id="obj">Delete</a>
+        </div>
+    </div>
+</div>
+{%empty%}
+{% include 'components/empty.html' with title="Blog Categories" %}
+{%endfor%}
+</div>
+
+{% endblock content %}

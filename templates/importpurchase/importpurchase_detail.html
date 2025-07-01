@@ -1,0 +1,110 @@
+{%extends 'base.html'%}
+{% block title %}
+{{object.org_name}}
+{% endblock title %}
+{% block title_bar %}
+{% include 'components/title_bar.html' with title=object.invoice_number %}
+{% endblock title_bar %}
+{% block content %}
+<style>
+   @media print{
+   @page {
+   size: A5 potrait;
+   scale:0.6;
+   margin: 5 mm;  /* this affects the margin in the printer settings */
+   border: 1px solid red;  /* set a border for all printed pages */
+   }
+   }
+</style>
+
+{% if not object.status %}
+    {% include './_import_purchase_card.html' with object=object name="Sales Return" id="invoice-card" %}
+{% else %}
+    {% include './_import_purchase_card.html' with object=object name="Invoice" id="invoice-card" %}
+{% endif %}
+
+
+<!-- begin::Footer-->
+<div class="d-flex flex-stack flex-wrap mt-lg-20 pt-13">
+    <!-- begin::Actions-->
+    <div class="my-1 me-5">
+       <!-- begin::Pint-->
+ 
+       {% if object.status %}
+           <button type="button" class="btn btn-success my-1 me-12" onclick="printDiv('invoice-card', {{object.pk}});">Print Invoice</button>
+           <button type="button" class="btn btn-danger my-1 me-12"  data-bs-toggle="modal" data-bs-target="#kt_modal_1" >Void Invoice</button>
+       {% else %}
+            <button type="button" class="btn btn-success my-1 me-12" onclick="printDiv('invoice-card', {{object.pk}});">Print Invoice</button>
+       {% endif %}
+ 
+       <!-- end::Pint-->
+       <!-- begin::Download-->
+    </div>
+    <!-- end::Actions-->
+ </div>
+ <!-- end::Footer-->
+ 
+ <div class="modal fade" tabindex="-1" id="kt_modal_1">
+     <div class="modal-dialog">
+         <div class="modal-content">
+             <div class="modal-header">
+                 <h3 class="modal-title">Are you sure you want to void {{object.id}} with invoice no {{object.bill_no}} ?</h3>
+ 
+                 <!--begin::Close-->
+                 <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                     <span class="svg-icon svg-icon-1"></span>
+                 </div>
+                 <!--end::Close-->
+             </div>
+             <form action="{% url 'importpur_chase_void' object.id %}" name="void_invoice" method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                      <div class="input-group">
+                          <span class="input-group-text">Reason</span>
+                          <textarea name="voidReason" class="form-control" aria-label="Void Reason"></textarea>
+                      </div>            
+                </div>
+ 
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+             </form>
+         </div>
+     </div>
+ </div>
+
+
+
+
+<script>
+
+    function printDiv(divName, objectId) {
+     var printContents = document.getElementById(divName).innerHTML;
+     var originalContents = document.body.innerHTML;
+     document.body.innerHTML = printContents;
+     window.print();
+     document.body.innerHTML = originalContents;
+     window.onafterprint = updateStatus(objectId);
+
+}
+
+</script>
+{%endblock%}
+{% block footer_js %}
+<script>
+     {% if messages %}
+        {% for message in messages %} 
+        Swal.fire({
+          html: "{{message}}",
+          icon: "success",
+          buttonsStyling: false,
+          confirmButtonText: "Ok, got it!",
+          customClass: {
+              confirmButton: "btn btn-primary",
+          },
+        })
+         {% endfor %}
+    {% endif %} 
+</script>
+{% endblock footer_js %}

@@ -1,0 +1,365 @@
+{%extends 'base.html'%}
+{% load static %}
+{%block title%} Create Journal {%endblock%}
+
+{% block pagetitle %}Journal Voucher {% endblock %}
+
+{% block content %}
+{% include 'components/title_bar.html' with title=' Journal Voucher' %}
+
+<style>
+    input {
+        border: 0;
+        outline: 0;
+        border-bottom: 2px solid rgb(94, 89, 89);
+        width: 100%;
+        letter-spacing: 1px;
+    }
+
+    input:focus {
+        border-color: rgb(71, 46, 214);
+    }
+
+    .adder:hover {
+        cursor: pointer;
+    }
+</style>
+
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-danger col-12" role="alert">
+            {{message}}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card">
+
+    <div class="card-header p-4 m-auto">
+        <center>
+            <h2>Journal Voucher</h2> <br>
+            <p>Date: ________________</p>
+        </center>
+    </div>
+    <div class="card-body pt-0">
+        <div class="row">
+            <div class="table-responsive">
+                <form>
+                    <select id="hidden_subledger" hidden>
+                        <option value="------" selected>-----</option>
+                        {% for sub in sub_ledgers%}
+                        <option data-ledgerid="{{sub.ledger.pk}}" value={{sub.id}}>{{sub.sub_ledger_name}}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                <form method="POST">
+                    <table class="table table-bordered align-middle " id="kt_customers_table">
+
+                        <thead>
+                            <tr>
+                                <th class="col-md-2">Ledger</th>
+                                <th class="col-md-2">Sub Ledger</th>
+                                <th class="col-md-3">Particulars</th>
+                                <th class="col-md-2">Debit(Rs) &nbsp; <i class="text-success fas fa-plus fa-lg adder"
+                                        onclick="addDebitRow()"></i> </th>
+
+                                <th class="col-md-2">Credit(Rs) &nbsp; <i class="text-success fas fa-plus fa-lg adder"
+                                        onclick="addCreditRow()"></i> </th>
+                                <th class="col-md-5">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="fw-bold text-gray-600">
+                            {% csrf_token %}
+
+                        <tbody id="form-debit-row">
+                            <tr>
+                                <td class="col-md-2">
+                                    <select class="ledger-select form-control" id="1_ledger_select" name="debit_ledger"
+                                        required onchange="ledgerChange(this)">
+                                        <option value="------" selected>-----</option>
+                                        {% for ledger in ledgers%}
+                                        <option value={{ledger.id}}>{{ledger.ledger_name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td class="col-md-2">
+                                    <select class="subledger-select form-control" id="1_subledger_select"
+                                        name="debit_subledger">
+                                        <option value="------" selected>-----</option>
+                                        {% for sub in sub_ledgers%}
+                                        <option data-ledgerid="{{sub.ledger.pk}}" value={{sub.id}}>
+                                            {{sube}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td class="col-md-3"><input type="text" data-side="dr" id="1_particular_input"
+                                        name="debit_particular" required></td>
+                                <td class="col-md-2"><input type="number"  step="0.01" class="debit_subtotal fw-bolder"
+                                        onkeyup="calculateDebitTotal()" min="0" name="debit_amount" required></td>
+                                <td class="col-md-2">x x x x x</td>
+                            </tr>
+                        </tbody>
+
+                        <tbody id="form-credit-row">
+                            <tr>
+                                <td class="col-md-2">
+                                    <select class="ledger-select form-control" id="2_ledger_select" name="credit_ledger"
+                                        required onchange="ledgerChange(this)">
+                                        <option value="------" selected>-----</option>
+                                        {% for ledger in ledgers%}
+                                        <option value={{ledger.id}}>{{ledger.ledger_name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td class="col-md-2">
+                                    <select class="subledger-select form-control" id="2_subledger_select"
+                                        name="credit_subledger">
+                                        <option value="------" selected>-----</option>
+                                        {% for sub in sub_ledgers%}
+                                        <option value={{sub.id}}>{{sub}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td class="col-md-4"><input type="text" data-side="cr" id="2_particular_input"
+                                        name="credit_particular" required></td>
+                                <td class="col-md-2">x x x x x</td>
+                                <td class="col-md-2"><input type="number" step="0.01" class="credit_subtotal fw-bolder"
+                                        onkeyup="calculateCreditTotal()" min="0" name="credit_amount" required></td>
+                            </tr>
+                        </tbody>
+
+                        <div class="row">
+                            <tr>
+                                <td class="col-md-2">Total</td>
+                                <td class="col-md-2"></td>
+                                <td class="col-md-3"></td>
+                                <td class="col-md-2 pt-5">
+                                    <p class="text-primary fw-bolder" id="total-debit">0</p>
+                                </td>
+                                <td class="col-md-2 pt-5">
+                                    <p class="text-primary fw-bolder" id="total-credit">0</p></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </td>
+                            </tr>
+                        </div>
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+
+    let debitRowCounter = 1;
+    let creditRowCounter = 1;
+    let counter = 3;
+
+    function getDefaultSelectedOption() {
+        let opt = document.createElement('option');
+        opt.value = '-----'
+        opt.innerHTML = '-----'
+        opt.selected = true
+        return opt
+    }
+
+
+    function addDebitRow() {
+        const row = `
+        <tr id="${debitRowCounter}_debit_row_counter">
+            <td class="col-md-2">
+                <select class="ledger-select form-control" name="debit_ledger" required id="${counter}_ledger_select"  onchange="ledgerChange(this)">
+                    <option value="------" selected>-----</option>
+                    {% for ledger in ledgers%}
+                        <option value={{ledger.id}}>{{ledger.ledger_name}}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td class="col-md-2">
+                <select class="subledger-select form-control"  name="debit_subledger" id="${counter}_subledger_select">
+                    <option value="------" selected>-----</option>
+                    {% for sub in sub_ledgers%}
+                            <option value={{sub.id}}>{{sub.sub_ledger_name}}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td class="col-md-3"><input type="text" data-side="dr" id="${counter}_particular_input" name="debit_particular" required></td>
+            <td class="col-md-2"><input type="number" step="0.01" min="0" class="debit_subtotal fw-bolder" onkeyup="calculateDebitTotal()" name="debit_amount" required></td>
+            <td class="col-md-2">x x x x x</td>
+            <td class="col-md-5"><button type="button" class="btn btn-danger btn-sm" onclick="deleteDebitRow(${debitRowCounter})">X</button></td>
+        </tr>
+        `
+        $('#form-debit-row').append(row)
+
+        $(`#${counter}_ledger_select`).select2()
+        $(`#${counter}_subledger_select`).select2()
+
+
+        counter++;
+        debitRowCounter++;
+    }
+
+    function addCreditRow() {
+        const row = `
+        <tr id="${creditRowCounter}_credit_row_counter">
+            <td class="col-md-2">
+                <select class="ledger-select form-control" name="credit_ledger" required  id="${counter}_ledger_select" onchange="ledgerChange(this)">
+                    <option value="------" selected>-----</option>
+                    {% for ledger in ledgers%}
+                        <option value={{ledger.id}}>{{ledger.ledger_name}}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td class="col-md-2">
+                <select class="subledger-select form-control"  name="credit_subledger"  id="${counter}_subledger_select">
+                    <option value="------" selected>-----</option>
+                    {% for sub in sub_ledgers%}
+                        <option value={{sub.id}}>{{sub.sub_ledger_name}}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td class="col-md-4"><input type="text"  data-side="cr" id="${counter}_particular_input" name="credit_particular" required></td>
+            <td class="col-md-2">x x x x x</td>
+            <td class="col-md-2"><input type="number" step="0.01" min="0" class="credit_subtotal fw-bolder" onkeyup="calculateCreditTotal()" name="credit_amount" required></td>
+            <td class="col-md-5"><button type="button" class="btn btn-danger btn-sm"  onclick="deleteCreditRow(${creditRowCounter})">X</button></td>
+        </tr>
+        `
+        $('#form-credit-row').append(row)
+
+        $(`#${counter}_ledger_select`).select2()
+
+        $(`#${counter}_subledger_select`).select2()
+
+
+        counter++;
+        creditRowCounter++;
+    }
+
+
+    function ledgerChange(sel) {
+        let selectedRowId = sel.id[0];
+        let ledgerId = sel.options[sel.selectedIndex].value;
+        let selectedSubledger = $(`#${selectedRowId}_subledger_select`)
+        selectedSubledger.empty()
+        let allSubLedgerOptions = document.getElementById('hidden_subledger').options
+
+        ledgerId = parseInt(ledgerId)
+        if (ledgerId) {
+            let title = sel.options[sel.selectedIndex].innerHTML
+            let particular = document.getElementById(`${selectedRowId}_particular_input`)
+            if (particular.dataset.side === 'dr') {
+                particular.value = `${title} a/c Dr`
+            } else {
+                particular.value = `To ${title}`
+            }
+
+
+            selectedSubledger.append(getDefaultSelectedOption())
+            allSubLedgerOptions.forEach(i => {
+                if (i.dataset.ledgerid == ledgerId) {
+                    let opt = document.createElement('option');
+                    opt.value = i.value
+                    opt.dataset.ledgerid = i.dataset.ledgerid
+                    opt.innerHTML = i.innerHTML
+                    selectedSubledger.append(opt)
+                }
+            })
+        }
+        else {
+            selectedSubledger.append(getDefaultSelectedOption())
+            allSubLedgerOptions.forEach(i => {
+                let opt = document.createElement('option');
+                opt.value = i.value
+                opt.dataset.ledgerid = i.dataset.ledgerid
+                opt.innerHTML = i.innerHTML
+                selectedSubledger.append(opt)
+            })
+        }
+
+    }
+
+    function deleteDebitRow(rowId) {
+        let debitRow = document.getElementById('form-debit-row')
+        let row = document.getElementById(rowId + '_debit_row_counter')
+        debitRow.removeChild(row)
+        calculateDebitTotal()
+    }
+
+    function deleteCreditRow(rowId) {
+        let creditRow = document.getElementById('form-credit-row')
+        let row = document.getElementById(rowId + '_credit_row_counter')
+        creditRow.removeChild(row)
+        calculateCreditTotal()
+    }
+
+
+    // function calculateDebitTotal() {
+    //     let allDrValues = document.querySelectorAll('.debit_subtotal')
+    //     let sum = 0
+    //     for (let i of allDrValues) {
+    //         sum += parseInt(i.value)
+    //     }
+    //     document.getElementById('total-debit').innerHTML = sum
+    // }
+
+    function calculateDebitTotal() {
+    let allDrValues = document.querySelectorAll('.debit_subtotal')
+    let sum = 0
+    for (let i of allDrValues) {
+        sum += parseFloat(i.value)
+    }
+    document.getElementById('total-debit').innerHTML = sum.toFixed(2); // Display the sum with two decimal places
+    }
+
+
+    // function calculateCreditTotal() {
+    //     let allCrValues = document.querySelectorAll('.credit_subtotal')
+    //     let sum = 0
+    //     for (let i of allCrValues) {
+    //         sum += parseInt(i.value)
+    //     }
+    //     document.getElementById('total-credit').innerHTML = sum
+    // }
+
+    function calculateCreditTotal() {
+    let allCrValues = document.querySelectorAll('.credit_subtotal')
+    let sum = 0
+    for (let i of allCrValues) {
+        sum += parseFloat(i.value)
+    }
+    document.getElementById('total-credit').innerHTML = sum.toFixed(2); // Display the sum with two decimal places
+    }
+
+
+</script>
+
+
+{% block footer %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('.ledger-select').select2();
+    });
+    $(document).ready(function () {
+        $('.subledger-select').select2({
+            tags: true
+        });
+    });
+
+
+</script>
+{% endblock %}
+
+
+
+{% endblock %}

@@ -1,0 +1,102 @@
+{%extends 'base.html'%}
+{% block pagetitle %}Journal {% endblock %}
+{% load humanize %}
+{% block title %}Journal {% endblock %}
+
+{% block content %}
+{% include 'components/title_bar.html' with title=' Journal Voucher' %}
+
+<style>
+    input {
+        border: 0;
+        outline: 0;
+        border-bottom: 2px solid rgb(94, 89, 89);
+        width: 100%;
+    }
+
+    input:focus {
+        border-color: rgb(71, 46, 214);
+
+    }
+    td{
+        letter-spacing: 1px;
+    }
+</style>
+
+<div class="card">
+    <div class="card-header p-4 m-auto">
+        <center>
+                <h2>Journal Voucher</h2> <br>
+                <p>Date: {{from_date}}  TO  {{to_date}}</p>
+        </center>
+    </div>
+    <div class="card-body pt-0">
+        <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle table-row-dashed fs-6 gy-5 dataTable no-footer"
+                    id="kt_customers_table">
+
+                    <thead class="fw-bolder">
+                        <th>Sub Ledger</th>
+                        <th>Particulars</th>
+                        <th>L.F</th>
+                        <th>Debit(Rs)</th>
+                        <th>Credit(Rs)</th>
+                    </thead>
+                    <tbody class="fw-bold text-gray-600">
+                        {% for j in journals.entries %}
+                            <div class="row">
+                                {% for d in j.dr %}
+                                <tr>
+                                    <td>{{d.ledger.ledger_name}}</td>
+                                    <td class="col-md-5">{{d.particulars}}</td>
+                                    <td></td>
+                                    <td class="col-md-2">{{d.debit_amount| intcomma}}</td>
+                                    <td class="col-md-2">------</td>
+                                </tr>
+                                {% endfor %}
+                            </div>
+                            <div class="row">
+                                {% for c in j.cr %}
+                                <tr>
+                                    <td>{{c.ledger.ledger_name}}</td>
+                                    <td class="col-md-5">{{c.particulars}}</td>
+                                    <td></td>
+                                    <td class="col-md-2">-------</td>
+                                    <td class="col-md-2">{{c.credit_amount| intcomma}}</td>
+                                </tr>
+                                {% endfor %}
+
+                                <tr>
+                                    <td class="text-primary">Total</td>
+                                    <td class="col-md-5"></td>
+                                    <td></td>
+                                    <td class="col-md-2 fw-bolder text-primary" id="total-debit">{{j.dr_total| intcomma}}</td>
+                                    <td class="col-md-2 fw-bolder text-primary" id="total-credit">{{j.cr_total| intcomma}}</td>                        
+                                </tr>
+                            </div>
+                            <tr style="border:2px solid black">
+                            </tr>
+                        {% endfor %}
+                        <div class="row">
+                            <tr>
+                                <td class="text-primary">Total</td>
+                                <td class="col-md-5"></td>
+                                <td></td>
+                                <td class="col-md-2 fw-bolder text-primary" id="total-debit">{{journals.debit_sum| intcomma}}</td>
+                                <td class="col-md-2 fw-bolder text-primary" id="total-credit">{{journals.credit_sum| intcomma}}</td>   
+                            </tr>
+                        </div>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+
+{% endblock %}

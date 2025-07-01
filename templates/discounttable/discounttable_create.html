@@ -1,0 +1,76 @@
+{%extends 'base.html'%} {%load static%} {%block title%} Create {%endblock%}
+{%block content %}
+<div class="card p-2">
+
+<div class="card-body p-4 m-4">
+
+  <h1>{% if title %} {{title}} {% else %} Create {% endif %}</h1>
+    <form class="" enctype="multipart/form-data" method="POST">
+      <div class="row">
+         {% for field in form.visible_fields %}
+
+         <!-- {{field.field.widget.input_type}} -->
+         {% if field.field.widget.input_type == "text" or field.field.widget.input_type == "number" or field.field.widget.input_type == "datetime-local" or field.field.widget.input_type == "url" or field.field.widget.input_type == "email" or field.field.widget.input_type == "date" %}
+         <div class="col-md-6 fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+
+         {% elif field.field.widget.input_type == "textarea" or field.field.widget.input_type == "checkbox" %}
+                <div class="col-md-12 fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+          {% else %}
+                  <div id="div-{{field.auto_id}}">
+          {% endif %}
+                    
+            <p class="form-group">
+                  {% if field.label == "Discount amount" %}
+                  <label for="{{field.auto_id}}">{{field.label}}</label>
+
+                  <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" style="background-color: rgb(185, 51, 51);" id="discount_prepend"> - </span>
+                    </div>
+                    {{field}}
+                  </div>
+                    <div class="fv-plugins-message-container invalid-feedback"><div data-field="daterangepicker_input"> {{field.errors}} </div></div>
+
+                  {% else %}
+        
+                    <label for="{{field.auto_id}}">{{field.label}}</label>
+                  {{field}}
+                    <div class="fv-plugins-message-container invalid-feedback"><div data-field="daterangepicker_input"> {{field.errors}} </div></div>
+                  {% endif %}
+                  </p>
+                  </div>
+                    {% endfor %}
+          </div>
+
+
+    {% csrf_token %}
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+
+  </div>
+</div>
+
+<script>
+
+    let option = document.querySelector('select');
+    let addonElement = document.getElementById('discount_prepend');
+
+    option.addEventListener("change", (evt)=>{
+        let selectedValue = evt.target.value
+        if(selectedValue==='PCT'){
+          addonElement.innerHTML = "%";
+            
+        }else if(selectedValue==='FLAT'){
+          addonElement.innerHTML = "RS"
+        }else{
+          addonElement.innerHTML = "-"
+        }
+    })
+
+
+</script>
+
+
+{% comment %} {% include 'select2.html' %} {% endcomment %}
+{% endblock %}

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Silverline pos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body>
+    <form action="" method="get">
+      <div class="flex justify-between px-14 mt-3">
+        <div class="p-2 space-x-3">
+          <label for="start">Starting Date</label>
+          <input type="date" name="datefirst" id="" />
+        </div>
+        <div class="p-2 space-x-2">
+          <label for="end">Ending Date</label>
+          <input type="date" name="datesecond"/>
+        </div>
+        <div>
+          <input type="submit" value="Find" class="p-1 px-5 bg-[#136b58] text-white rounded" />
+        </div>
+      </div>
+      
+    </form>
+
+    <div
+    class="border-collapse border border-gray-900 md:mx-10 mx-3 mt-10 mb-10"
+  >
+    <div class="text-center text-[#136b58]">
+      <h1>{{outlet}} </h1>
+      <h2>Tripeshwor ,Kathmandu , Nepal</h2>
+      <h3>BILL SUMMARY</h3>
+    </div>
+    <div class="flex justify-between items-center text-[#136b58]">
+      <p class="border-collapse border border-b-[#136b58] text-sm md:text-lg">
+        Starting Date: {{date1}}
+      </p>
+      <p class="border-collapse border border-b-[#136b58] text-sm md:text-lg">
+        Ending Date: {{date2}}
+      </p>
+    </div>
+    <table
+      class="text-[9px] md:text-sm w-full mt-10 md:text-center bg-[#62dac073] border-collapse border border-slate-400"
+    >
+      <thead>
+        <tr>
+          <th>
+            <span class="border-collapse border border-b-[#136b58]"
+              >Date</span
+            >
+          </th>
+          <th>
+            <span class="border-collapse border border-b-[#136b58]"
+              >Bill No</span
+            >
+          </th>
+          <th>
+            <span class="border-collapse border border-b-[#136b58]"
+              >Sub Total</span
+            >
+          </th>
+          <th>
+            <span class="border-collapse border border-b-[#136b58]"
+              >Service Charge
+            </span>
+          </th>
+          <th>
+            <span class="border-collapse border border-b-[#136b58]">Vat</span>
+          </th>
+          <th>
+            <span class="border-collapse border border-b-[#136b58]"
+              >Discount Amount</span
+            >
+          </th>
+          <th>
+            <span class="border-collapse border border-b-[#136b58]"
+              >Total</span
+            >
+          </th>
+          <th>
+            <span class="border-collapse border border-b-[#136b58]"
+              >Payment Mode</span
+            >
+          </th>
+          <th>
+            <span class="border-collapse border border-b-[#136b58]"
+              >GuestName
+            </span>
+          </th>
+        </tr>
+      </thead>
+      {% for tbl in tblorder3 %}
+      <tbody>
+        <tr>
+          <td>{{tbl.date}}</td>
+          <td>{{tbl.bill_no}}</td>
+          <td>{{tbl.subtotal}}</td>
+          <td>{{tbl.serviceCharge}}</td>
+          <td>{{tbl.vat}}</td>
+          <td>{{tbl.DiscountAmt}}</td>
+        <td>{{tbl.Total}}</td>
+          <td>{{tbl.PaymentMode}}</td>
+          <td>{{tbl.GuestName}}</td>
+        </tr>
+      </tbody>
+      {% endfor %}
+    </table>
+  </div>
+    <div class="border-collapse border border-gray-900 md:mx-10 mx-3 mt-10">
+      <h1 class="text-[#136b58] text-xl text-center">
+       {{outlet}} Food Sales Report between :{{date1}} and {{date2}}
+      </h1>
+      <table
+        class="w-full mt-10 text-center bg-[#62dac073] border-collapse border border-slate-400"
+      >
+        <thead class="p-1">
+          <tr>
+            <th>Group</th>
+            <th>menu item</th>
+            <th>ItemRate</th>
+            <th>Count</th>
+            <th>Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for tbl in tblorder %}
+          <td>{{tbl.description}}</td>
+          <td>{{tbl.itemName}}</td>
+          <td>{{tbl.itemrate}}</td>
+          <td>{{tbl.count}}</td>
+          <td>{{tbl.revenu}}</td>
+        {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="text-[#1c997e] pl-2 py-3">
+        <p>Total item Sold :-<span> 9.00</span></p>
+        <p>total Revenue :-<span> 4,384.55</span></p>
+        <p>Total Discount :-<span></span></p>
+        <p>Non Chargeable :-<span> Value</span></p>
+      </div>
+    </div>
+    <div class="border-collapse border border-gray-900 md:mx-10 mx-3 mt-10">
+      <h1 class="text-[#136b58] text-center text-[14px] md:text-xl">
+       {{outlet}} Baverge Sales Report between :{{date1}} and {{date2}}
+      </h1>
+      <table
+        class="w-full mt-10 text-center bg-[#62dac073] border-collapse border border-slate-400"
+      >
+        <thead class="p-1">
+          <tr>
+            <th>Group</th>
+            <th>menu item</th>
+            <th>ItemRate</th>
+            <th>Count</th>
+            <th>Revenue</th>
+          </tr>
+        </thead>
+        {% for tbl in tblorder2 %}
+        <tbody>
+          <td>{{tbl.description}}</td>
+          <td>{{tbl.itemName}}</td>
+          <td>{{tbl.itemrate}}</td>
+          <td>{{tbl.count}}</td>
+          <td>{{tbl.revenu}}</td>
+        </tbody>
+        {% endfor %}
+      </table>
+      <div class="text-[#1c997e] pl-2 py-3">
+        <p>Total items sold: <span>14,00</span></p>
+        <p>Total sale: <span>21,317</span></p>
+        <p>Total Discount: <span></span></p>
+        <p>None Chargeable: <span>Value</span></p>
+      </div>
+
+      <div class="p-10">
+        <h1 class="text-[#136b58] text-center p-5 text-sm md:text-xl">
+         {{outlet}} Non Chargeable/Complimentary Report between : {{date1}},{{date2}}
+        </h1>
+
+        <div>
+          <ul class="flex justify-around text-[#136b58] p-5">
+            <li class="border-collapse border border-b-[#136b58]">Type</li>
+            <li class="border-collapse border border-b-[#136b58]">Menuitem</li>
+            <li class="border-collapse border border-b-[#136b58]">Recipent</li>
+            <li class="border-collapse border border-b-[#136b58]">count</li>
+            <li class="border-collapse border border-b-[#136b58]">Value</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+   
+  </body>
+</html>

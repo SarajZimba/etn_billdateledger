@@ -1,0 +1,251 @@
+{%extends 'base.html'%}
+{% load tags %}
+{% block pagetitle %}Sales Book {% endblock %}
+{% block home %} {% url 'materialized_view' %} {% endblock %}
+{% block title %}Sales Book  {% endblock %}
+{% block content %}
+<button id="createCustomerBtn" class="btn btn-success mb-2">Create Customers</button>
+<div id="createCustomerMsg"></div>
+{% include 'components/title_bar.html' with title='Sales Book' subtitle_date="True" %}
+<div class="card">
+   {% include 'components/search_filter.html' with  search_title="Search Sales Book" export_url="materialized_view" object_list="true" format="xls" %} 
+   <div class="card-body pt-0">
+      <!--begin::Table-->
+      <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+         {% include 'components/org_header.html' with name="Sales Book" %}
+         
+         <div class="d-flex justify-content-between">
+            <h1>Sales Entry</h1>
+            {% comment %} {% if return_entry or sales_entry %}
+               <a href="{% url 'sales_export' %}" class="btn btn-primary">Export</a>
+            {% endif %} {% endcomment %}
+         </div>
+         <div class="table-responsive">
+            <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_customers_table">
+               <!--begin::Table head-->
+               {%if sales_entry %}
+               <thead>
+                  <!--begin::Table row-->
+                  <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+                     <th class="min-w-10px sorting" tabindex="0" > Entry ID</th>
+                     <th class="min-w-20px sorting" tabindex="0" >Miti</th>
+                     <th class="min-w-50px sorting" tabindex="0" > Bill Date</th>
+                     <th class="min-w-50px sorting" tabindex="0" > Bill No</th>
+                     <th class="min-w-50px sorting" tabindex="0" > Customer Name</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Customer PAN</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Amount</th>
+                     <th class="min-w-50px sorting" tabindex="0" >N.Tax Sales</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Zero Tax Sales</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Taxable Amount</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Excise Duty Amount</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Tax Amount</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Serviced Item</th>
+                     <th class="min-w-20px sorting" tabindex="0" >Quantity</th>
+                     <th class="min-w-20px sorting" tabindex="0" >ExemptedSales</th>
+                     <th class="min-w-20px sorting" tabindex="0" >Export</th>
+                     <th class="min-w-20px sorting" tabindex="0" >ExportCountry</th>
+                     <th class="min-w-20px sorting" tabindex="0" >ExportNumber</th>
+                     <th class="min-w-20px sorting" tabindex="0" >ExportDate</th>
+                  </tr>
+                  <!--end::Table row-->
+               </thead>
+               {%endif%}
+               <tbody class="fw-bold text-gray-600">
+                  {% for object in sales_entry %}
+                  <tr class="odd" id="obj-{{object.pk}}">
+                     <td>{{object.tblSalesEntry}}</td>
+                     <td>{{object.miti|replace_dash_with_dot}}</td>
+                     <td>{{object.bill_date|replace_dash_with_dot}}</td>
+                     <td>{{object.bill_no}}</td>
+                     <td>{{object.customer_name}}</td>
+                     <td>{{object.customer_pan}}</td>
+                     <td>{{object.amount}}</td>
+                     <td>{{object.NoTaxSales}}</td>
+                     <td>{{object.ZeroTaxSales}}</td>
+                     <td>{{object.taxable_amount}}</td>
+                     <td>{{object.excise_duty_amount}}</td>
+                     <td>{{object.tax_amount}}</td>
+                     <td>{{object.ServicedItem}}</td>
+                     <td>{{object.quantity}}</td>
+                     <td>{{object.exemptedSales}}</td>
+                     <td>{{object.export}}</td>
+                     <td>{{object.exportCountry}}</td>
+                     <td>{{object.exportNumber}}</td>
+                     <td>{{object.exportDate}}</td>
+                  </tr>
+                  {%empty%}
+                  {% include 'components/empty.html' with  title="Sales Entry" url="tblsalesentry_create"%}
+                  {% endfor %}
+                  {% if sales_entry %}
+                  {% include 'components/total_sales.html' %}
+                  {% endif %}
+               </tbody>
+               <!--end::Table body-->
+            </table>
+         </div>
+         {%if object_list%}
+         {% include 'pagination.html' %}
+         {%endif%}
+      </div>
+       <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+         <br>
+         <div class="d-flex justify-content-between">
+            <h1>Sales Return</h1>
+         </div>
+         <div class="table-responsive">
+            <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_customers_table">
+               <!--begin::Table head-->
+               {%if return_entry%}
+               <thead>
+                  <!--begin::Table row-->
+                  <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+                     <th class="min-w-10px sorting" tabindex="0" > Entry ID</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Miti</th>
+                     <th class="min-w-50px sorting" tabindex="0" > Bill No</th>
+                     <th class="min-w-50px sorting" tabindex="0" > Bill Date</th>
+                     <th class="min-w-50px sorting" tabindex="0" > Customer Name</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Customer PAN</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Amount</th>
+                     <th class="min-w-50px sorting" tabindex="0" >N.Tax Sales</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Zero Tax Sales</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Taxable Amount</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Tax Amount</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Serviced Item</th>
+                     <th class="min-w-20px sorting" tabindex="0" >Quantity</th>
+                     <th class="min-w-20px sorting" tabindex="0" >ExemptedSales</th>
+                     <th class="min-w-20px sorting" tabindex="0" >Export</th>
+                     <th class="min-w-20px sorting" tabindex="0" >ExportCountry</th>
+                     <th class="min-w-20px sorting" tabindex="0" >ExportNumber</th>
+                     <th class="min-w-20px sorting" tabindex="0" >ExportDate</th>
+                  </tr>
+                  <!--end::Table row-->
+               </thead>
+               {%endif%}
+               <tbody class="fw-bold text-gray-600">
+                  {% for object in return_entry %}
+                  <tr class="odd" id="obj-{{object.pk}}">
+                     <td>{{object.idtblreturnEntry}}</td>
+                     <td>{{object.miti|replace_dash_with_dot}}</td>
+                     <td>{{object.bill_no}}</td>
+                     <td>{{object.bill_date|replace_dash_with_dot}}</td>
+                     <td>{{object.customer_name}}</td>
+                     <td>{{object.customer_pan}}</td>
+                     <td>{{object.amount}}</td>
+                     <td>{{object.NoTaxSales}}</td>
+                     <td>{{object.ZeroTaxSales}}</td>
+                     <td>{{object.taxable_amount}}</td>
+                     <td>{{object.tax_amount}}</td>
+                     <td>{{object.ServicedItem}}</td>
+                     <td>{{object.quantity}}</td>
+                     <td>{{object.exemptedSales}}</td>
+                     <td>{{object.export}}</td>
+                     <td>{{object.exportCountry}}</td>
+                     <td>{{object.exportNumber}}</td>
+                     <td>{{object.exportDate}}</td>
+                  </tr>
+                  {%empty%}
+                  {% include 'components/empty.html' with  title="Bill Entry" url="tablreturnentry_create" %}
+                  {% endfor %}
+                  {% if return_entry %}
+                     {% include 'components/total_return.html' with before_td='1234' %}
+                  {% endif %}
+                  <tr>
+                     <td>Grand Total</td>
+                     <td></td>
+                     <td></td>
+                     <td></td>
+                     <td></td>
+                     <td>{{grand_total_amount|floatformat:2}}</td>
+                     <td>{{grand_total_no_tax|floatformat:2}}</td>
+                     <td>{{grand_total_export_at_zero_rate|floatformat:2}}</td>
+                     <td>{{grand_total_taxable_amount|floatformat:2}}</td>
+                     <td>{{grand_total_tax_amount|floatformat:2}}</td>
+                     <td></td>
+                     <td></td>
+                     <td>{{grand_total_exempted_sales|floatformat:2}}</td>
+                  </tr>
+               </tbody>
+               <!--end::Table body-->
+            </table>
+         </div>
+         {%if object_list%}
+         {% include 'pagination.html' %}
+         {%endif%}
+      </div>
+
+      <br>
+      <br>
+      <br>
+   {% comment %} <h2>Grand Total</h2> 
+   <div class="table-responsive">
+      <table>
+         <tr>
+            <td>Grand Total Amount</td>
+            <td>&nbsp;&nbsp;&nbsp;{{grand_total_amount|floatformat:2}}</td>
+         </tr>
+          <tr>
+            <td>Total No Tax</td>
+            <td>&nbsp;&nbsp;&nbsp;{{grand_total_no_tax|floatformat:2}}</td>
+
+         <tr>
+            <td>Total Export At Zero Rate</td>
+            <td> &nbsp;&nbsp;&nbsp;{{grand_total_export_at_zero_rate|floatformat:2}}</td>
+         </tr>
+            </tr>
+            <tr>
+            <td>Total  Tax Amount</td>
+            <td>&nbsp;&nbsp;&nbsp;{{grand_total_tax_amount|floatformat:2}}</td>
+         </tr>
+
+         <tr>
+            <td>Total Taxable Amount</td>
+            <td>&nbsp;&nbsp;&nbsp;{{grand_total_taxable_amount|floatformat:2}}</td>
+         </tr>
+
+
+
+      </table>
+
+
+   </div> {% endcomment %}
+
+
+      <!--end::Table-->
+   </div>
+   <!--end::Card body-->
+</div>
+<script>
+    document.getElementById("createCustomerBtn").addEventListener("click", function () {
+        const btn = this;
+        const msgDiv = document.getElementById("createCustomerMsg");
+
+        // Disable the button and show loading indicator
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+
+        fetch("{% url 'createcustomerfromsalesentry' %}", {
+            method: "POST",
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                msgDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+            } else {
+                msgDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            msgDiv.innerHTML = `<div class="alert alert-danger">Error occurred: ${error}</div>`;
+        })
+        .finally(() => {
+            // Re-enable the button and reset text
+            btn.disabled = false;
+            btn.innerText = "Create Customers";
+        });
+    });
+</script>
+{% endblock %}

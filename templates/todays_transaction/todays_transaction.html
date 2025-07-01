@@ -1,0 +1,137 @@
+  {% extends 'base.html' %}
+  {% block pagetitle %}Today's Transactions{% endblock %}
+  {% block home %}{% url 'todays_transaction' %}{% endblock %}
+  {% block title %}Customer List{% endblock %}
+  {% block content %}
+      {% include 'components/title_bar.html' with title='Today\'s Transaction' %}
+
+      <!--begin::Card-->
+      <div class="card">
+          <div class="card-body pt-0">
+              <h2 class="mt-3">Last Updated: <span class="text-primary">{{ last_update|time }}</span></h2>
+              <!--begin::Table-->
+              <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+                  <div class="table-responsive">
+                      <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_customers_table">
+                          <!--begin::Table head-->
+                          {% if terminals %}
+                              <thead>
+                                  <!--begin::Table row for Terminal names-->
+                                  <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+                                      <th class="min-w-125px sorting" rowspan="2">Terminal</th>
+                                      {% for object in terminals %}
+                                          <th class="min-w-125px sorting" colspan="2">{{ object.terminal }}</th>
+                                      {% endfor %}
+                                      <th class="min-w-125px sorting" colspan="2">Total</th>
+                                  </tr>
+                                  <!--end::Table row for Terminal names-->
+                                  <!--begin::Table row for Subcategories (e.g., Total Sale, VAT, Net Sale, etc.)-->
+                                  <!-- <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+                                      {% for object in terminals %}
+                                          <th class="min-w-125px sorting">Value</th>
+                                      {% endfor %}
+                                      <th class="min-w-125px sorting">Value</th>
+                                  </tr> -->
+                                  <!--end::Table row for Subcategories-->
+                              </thead>
+                          {% endif %}
+                          <!--begin::Table body-->
+                          <tbody class="fw-bold text-gray-600">
+                              {% if terminals %}
+                                  <!--Row for Total Sale-->
+                                  <tr class="odd">
+                                      <td><b>Total Sale</b></td>
+                                      {% for object in terminals %}
+                                          <td>{{ object.total_sale }}</td>
+                                          <td>{{ object.total_sale_percentage }}</td>
+                                      {% endfor %}
+                                      <td>{{ terminal_totals.total_sale }}</td>
+                                      <td>{{ terminal_totals.total_sale_percentage }}</td>
+                                  </tr>
+                                  <!--Row for VAT-->
+                                  <tr class="odd">
+                                      <td><b>VAT</b></td>
+                                      {% for object in terminals %}
+                                          <td>{{ object.vat }}</td>
+                                          <td>{{ object.vat_percentage }}</td>
+                                      {% endfor %}
+                                      <td>{{ terminal_totals.vat }}</td>
+                                      <td>{{ terminal_totals.vat_percentage }}</td>
+                                  </tr>
+                                  <!--Row for Net Sale-->
+                                  <tr class="odd">
+                                      <td><b>Net Sale</b></td>
+                                      {% for object in terminals %}
+                                          <td>{{ object.net_sale }}</td>
+                                          <td>{{ object.net_sale_percentage }}</td>
+                                      {% endfor %}
+                                      <td>{{ terminal_totals.net_sale }}</td>
+                                      <td>{{ terminal_totals.net_sale_percentage }}</td>
+                                  </tr>
+                                  <!--Row for Discount-->
+                                  <tr class="odd">
+                                      <td><b>Discount</b></td>
+                                      {% for object in terminals %}
+                                          <td>{{ object.discount }}</td>
+                                          <td>{{ object.discount_percentage }}</td>
+                                      {% endfor %}
+                                      <td>{{ terminal_totals.discount }}</td>
+                                      <td>{{ terminal_totals.discount_percentage }}</td>
+                                  </tr>
+                                  <!--Row for Cash-->
+                                  <tr class="odd">
+                                      <td><b>Cash</b></td>
+                                      {% for object in terminals %}
+                                          <td>{{ object.cash }}</td>
+                                          <td>{{ object.cash_percentage }}</td>
+                                      {% endfor %}
+                                      <td>{{ terminal_totals.cash }}</td>
+                                      <td>{{ terminal_totals.cash_percentage }}</td>
+                                  </tr>
+                                  <!--Row for Credit Card-->
+                                  <tr class="odd">
+                                      <td><b>Credit Card</b></td>
+                                      {% for object in terminals %}
+                                          <td>{{ object.credit_card }}</td>
+                                          <td>{{ object.credit_card_percentage }}</td>
+                                      {% endfor %}
+                                      <td>{{ terminal_totals.credit_card }}</td>
+                                      <td>{{ terminal_totals.credit_card_percentage }}</td>
+                                  </tr>
+                                  <!--Row for Mobile Payment-->
+                                  <tr class="odd">
+                                      <td><b>Mobile Payment</b></td>
+                                      {% for object in terminals %}
+                                          <td>{{ object.mobile_payment }}</td>
+                                          <td>{{ object.mobile_payment_percentage }}</td>
+                                      {% endfor %}
+                                      <td>{{ terminal_totals.mobile_payment }}</td>
+                                      <td>{{ terminal_totals.mobile_payment_percentage }}</td>
+                                  </tr>
+                                  <!--Row for Last Updated-->
+                                  <tr class="odd">
+                                      <td><b>Last Updated</b></td>
+                                      {% for object in terminals %}
+                                          <td>{{ object.last_updated|time }}</td>
+                                          <td></td>
+                                      {% endfor %}
+                                      <td>{{ terminal_totals.last_updated|time }}</td>
+                                      <td></td>
+                                  </tr>
+                              {% else %}
+                                  {% include 'components/empty.html' with title="Transaction" %}
+                              {% endif %}
+                          </tbody>
+                          <!--end::Table body-->
+                      </table>
+                  </div>
+                  {% if object_list %}
+                      {% include 'pagination.html' %}
+                  {% endif %}
+              </div>
+              <!--end::Table-->
+          </div>
+          <!--end::Card body-->
+      </div>
+      <!--end::Card-->
+  {% endblock %}

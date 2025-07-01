@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Create{% endblock %}
+{% block content %}
+<style>
+    .form-select, .form-control, textarea {
+        display: block; /* Makes the elements block-level */
+        width: 100%;    /* Adjusts the width to 100% of the parent container */
+        margin-bottom: 15px; /* Space between fields */
+    }
+
+    .form-group {
+        margin-bottom: 15px; /* Space between form groups */
+    }
+
+    .col-half {
+        width: 50%; /* Half width of the container */
+    }
+</style>
+
+<div class="card p-2">
+    <div class="card-body p-4 m-4">
+        <h1>{% if title %}{{ title }}{% else %}Create{% endif %}</h1>
+        <form id="expense-form" method="POST">
+            <div class="row">
+                {% csrf_token %}
+                
+                <!-- Paid From -->
+                <div class="col-12">
+                    <div class="form-group col-half">
+                        <label for="credit_ledger">Paid From</label>
+                        <select id="credit_ledger" name="credit_ledger" class="form-select" data-control="select2" data-placeholder="Paid From" onchange="updateCreditSubLedgers()">
+                            <option value="">Select Credit Ledger</option>
+                            {% for ledger in credit_ledgers %}
+                                <option value="{{ ledger.id }}">{{ ledger.ledger_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Select Sub Ledger -->
+                <div class="col-12">
+                    <div class="form-group col-half">
+                        <label for="credit_sub_ledger">Select Credit Sub Ledger</label>
+                        <select id="credit_sub_ledger" name="credit_sub_ledger" class="form-select" data-control="select2" data-placeholder="Select Credit Sub Ledger">
+                            <option value="">Select Credit Sub Ledger</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Expense From -->
+                <div class="col-12">
+                    <div class="form-group col-half">
+                        <label for="ledger">Expense from</label>
+                        <select id="ledger" name="ledger" class="form-select" data-control="select2" data-placeholder="Expense from" onchange="updateSubLedgers()">
+                            <option value="">Select Ledger</option>
+                            {% for ledger in ledgers %}
+                                <option value="{{ ledger.id }}">{{ ledger.ledger_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Select Sub Ledger -->
+                <div class="col-12">
+                    <div class="form-group col-half">
+                        <label for="sub_ledger">Select Sub Ledger</label>
+                        <select id="sub_ledger" name="sub_ledger" class="form-select" data-control="select2" data-placeholder="Select Sub Ledger">
+                            <option value="">Select Sub Ledger</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Amount -->
+                <div class="col-12">
+                    <div class="form-group col-half">
+                        <label for="amount">Amount</label>
+                        <input type="number" id="amount" name="amount" class="form-control" required>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="col-12">
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" class="form-control" rows="3" required></textarea>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Submit</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function updateSubLedgers() {
+    const ledgerField = document.getElementById('ledger');
+    const subledgerField = document.getElementById('sub_ledger');
+    const ledgerId = ledgerField.value;
+
+    if (ledgerId) {
+        fetch('/api/get-expense-subledgers/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ ledger: ledgerId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            subledgerField.innerHTML = '<option value="">Select Sub Ledger</option>';
+            data.forEach(subledger => {
+                const option = document.createElement('option');
+                option.value = subledger.id;
+                option.textContent = subledger.sub_ledger_name;
+                subledgerField.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching subledgers:', error);
+        });
+    } else {
+        subledgerField.innerHTML = '<option value="">Select Sub Ledger</option>';
+    }
+}
+
+function updateCreditSubLedgers() {
+    const ledgerField = document.getElementById('credit_ledger');
+    const subledgerField = document.getElementById('credit_sub_ledger');
+    const ledgerId = ledgerField.value;
+
+    if (ledgerId) {
+        fetch('/api/get-expense-subledgers/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ ledger: ledgerId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            subledgerField.innerHTML = '<option value="">Select Sub Ledger</option>';
+            data.forEach(subledger => {
+                const option = document.createElement('option');
+                option.value = subledger.id;
+                option.textContent = subledger.sub_ledger_name;
+                subledgerField.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching subledgers:', error);
+        });
+    } else {
+        subledgerField.innerHTML = '<option value="">Select Sub Ledger</option>';
+    }
+}
+
+document.getElementById('expense-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const formData = new FormData(this);
+    fetch('', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.href = "{% url 'expenses_list' %}";
+        } else {
+            console.error('Form submission failed:', response.statusText);
+        }
+    })
+    .catch(error => {
+        console.error('Error submitting form:', error);
+    });
+});
+</script>
+{% endblock %}

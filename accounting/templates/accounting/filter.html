@@ -1,0 +1,67 @@
+<div class="accordion accordion-flush" id="accordionFlushExample">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="flush-headingOne">
+        <button class="accordion-button collapsed no-print" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+          Toggle Filter
+        </button>
+      </h2>
+      <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+        <div class="card p-5">
+            <form method="GET" action="." id="account-filter-form" onsubmit=" e => preventDefault()">
+                <article class="card-group-item">
+                    <div class="filter-content">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="form-group col-md-6">   
+                                    <label>From</label>
+                                    <input type="date" class="form-control w-50 datetimepicker-input" name="fromDate" placeholder="From" value={{request.GET.fromDate}}>
+                                </div>
+                                <div class="form-group col-md-6 text-right">
+                                    <label>TO</label>
+                                    <input type="date" class="form-control w-50 datetimepicker-input" name="toDate" placeholder="To" value={{request.GET.toDate}}>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+
+                                <div class="custom-control custom-checkbox">
+                                    <input type="radio" class="form-check-input" name="option" value="standard" {% if request.GET.option == 'standard' %} checked {% endif %}>
+                                    <label class="custom-control-label" for="Check1"> Standard</label>
+                                </div>
+
+                                <div class="custom-control custom-checkbox mt-2">
+                                    <input type="radio" class="form-check-input" name="option" value="openclose" {% if request.GET.option == 'openclose' %} checked {% endif %} >
+                                    <label class="custom-control-label" for="Check1"> Opening/ Closing</label>
+                                </div>
+                                
+                            </div>
+                            
+                        </div>
+                    </div>
+                </article>
+                   
+                <input type="reset" value="Reset" class="btn btn-sm btn-warning">
+        
+                <input type="submit" value="Apply" class="btn btn-sm btn-primary">
+            </form>
+        </div>
+      </div>
+    </div>
+</div>
+
+
+<script>
+    let formElement = document.getElementById('account-filter-form')
+    formElement.addEventListener('reset', function(event){
+        const url = new URL(window.location.href);
+        url.searchParams.delete('fromDate');
+        url.searchParams.delete('toDate');
+        url.searchParams.delete('option');
+
+
+        window.history.replaceState({}, '', url);
+        window.location.reload()
+        // console.log(params)
+    })
+    
+</script>

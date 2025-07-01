@@ -1,0 +1,123 @@
+{%extends 'base.html'%}
+{% load tags %}
+{% block pagetitle %}Materialized List {% endblock %}
+{% block home %} {% url 'tbltaxentry_list' %} {% endblock %}
+{% block title %}Materialized List {% endblock %}
+{% block header %}
+<style>
+.container-xxl{
+   max-width:100%
+}
+</style>
+{% endblock %}
+{% block content %}
+{% include 'components/title_bar.html' with title='Materialized List '  %}
+<div class="card">
+   {% include 'components/search_filter.html' with  search_title="Search Materialized" export_url="materialized_export" %} 
+   <div class="card-body pt-0">
+      <!--begin::Table-->
+      <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+         <div class="table-responsive">
+            <table class="table align-middle table-row-dashed fs-9 gy-5 dataTable no-footer" >
+               <!--begin::Table head-->
+               {%if object_list%}
+               <thead>
+                  <!--begin::Table row-->
+                  <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+                     <th class="min-w-10px sorting" tabindex="0" >TaxId</th>
+                     <th class="min-w-10px sorting" tabindex="0" >Fiscal Year</th>
+                     <th class="min-w-125px sorting" tabindex="0" >Bill No</th>
+                     <th class="min-w-50px sorting" tabindex="0" > C.Name</th>
+                     <th class="min-w-50px sorting" tabindex="0" >C.PAN</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Bill Date</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Amt</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Discount</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Taxable Amt</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Tax Amt</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Is Printed</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Is Active</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Printed Time</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Entered By</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Printed By</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Is Realtime</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Syc with IRD</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Mode</th>
+                     <th class="min-w-50px sorting" tabindex="0" >VAT Refund Amount</th>
+                     <th class="min-w-50px sorting" tabindex="0" >Transaction ID</th>
+                  </tr>
+                  <!--end::Table row-->
+               </thead>
+               {%endif%}
+               <tbody class="fw-bold text-gray-600">
+                  {% for object in object_list %}
+                  <tr class="odd" id="obj-{{object.pk}}">
+           
+                     <td>{{object.idtbltaxEntry}}</td>
+                     <td>{{object.fiscal_year}}</td>
+                     <td>{{object.bill_no}}</td>
+                     <td>{{object.customer_name}}</td>
+                     <td>{{object.customer_pan}}</td>
+                     <td>{{object.bill_date|date:'Y.m.d'}}</td>
+                     <td>{{object.amount}}</td>
+                     <td>
+                     {% if object.discount %}
+                        {{object.discount}}
+                     {%else%}
+                        0
+                     {% endif %}
+                     </td>
+                     <td>{{object.taxable_amount}}</td>
+                     <td>{{object.tax_amount}}</td>
+                     <td>{{object.is_printed}}</td>
+                     <td>{{object.is_active}}</td>
+                     <td>{{object.printed_time}}</td>
+                     <td>{{object.entered_by}}</td>
+                     <td>{{object.printed_by}}</td>
+                     <td>{{object.is_realtime}}</td>
+                     <td>{{object.sync_with_ird}}</td>
+                     <td>{{object.payment_method}}</td>
+                     <td>{{object.vat_refund_amount}}</td>
+                     <td>{{object.transaction_id}}</td>
+             
+
+                  </tr>
+                  {%empty%}
+                  {% include 'components/empty.html' with  title="TblTaxEntry"%}
+                  {% endfor %}
+                  {% if object_list %}
+                  <tr>
+                     <td>Total</td>
+                     <td></td>
+                     <td></td>
+                     <td></td>
+                     <td></td>
+                     <td></td>
+                     <td>{{total_amount | floatformat:2}}</td>
+                     <td>{{discount | floatformat:2}}</td>
+                     <td>{{taxable_amount | floatformat:2}}</td>
+                     <td>{{tax_amount | floatformat:2}}</td>
+                     <td></td>
+                     <td></td>
+                     <td></td>
+                     <td></td>
+                     <td></td>
+                     <td></td>
+                     <td></td>
+                     <td>{{vat_refund_amount | floatformat:2}}</td>
+                     <td></td>
+                  </tr>
+                  {% endif %}
+               </tbody>
+               <!--end::Table body-->
+            </table>
+         </div>
+         {%if object_list%}
+         {% include 'pagination.html' %}
+         {%endif%}
+      </div>
+      <!--end::Table-->
+   </div>
+   <!--end::Card body-->
+</div>
+<script></script>
+{% endblock %}

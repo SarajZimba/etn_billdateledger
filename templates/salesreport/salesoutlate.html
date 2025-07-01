@@ -1,0 +1,37 @@
+{%extends 'base.html'%} 
+{% block pagetitle %}Out Let Name {% endblock %} {%block home %} 
+{% url 'bill_list' %} {% endblock %} 
+{% block title %}OutLet name{% endblock %} 
+{% block content %} 
+{% include 'components/title_bar.html' with title=' Out Let Name ' %}
+
+<div class="card">
+  
+{% for outlet  in outlet_name %}
+  <div>
+    <a class="btn btn-primary" href="https://inventory.silverlinepos.com/#{{outlet.Outlet_Name}}">Purchase</a>
+    <a class="btn btn-success" href="{% url 'org:report_view' outlet.Outlet_Name %}">Sales</a>
+
+    <p>
+      <a ><h1>{{outlet.Outlet_Name}}</h1></a>
+    </p>
+    <img src="https://www.tableau.com/sites/default/files/2021-06/DataGlossary_Icons_Pie%20Chart.jpg" alt="" srcset="">
+  </div>
+ 
+  <!--end::Card body-->
+</div>
+
+ {% endfor %}
+
+
+<script></script>
+
+{% endblock %}
+
+
+    <!--  <Button> </button>-->
+    <!--  <p>-->
+    <!--      <a href="{% url 'org:report_view' outlet.Outlet_Name %}">-->
+    <!--      <h1></h1></a>-->
+    <!--</p>-->
+     

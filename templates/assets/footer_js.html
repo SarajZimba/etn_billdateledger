@@ -1,0 +1,76 @@
+{% load static %}
+
+<!--begin::Global Javascript Bundle(used by all pages)-->
+<script src="{% static 'plugins/global/plugins.bundle.js' %}"></script>
+<script src="{% static 'js/scripts.bundle.js' %}"></script>
+<!--end::Global Javascript Bundle-->
+<!--begin::Page Vendors Javascript(used by this page)-->
+{% comment %}
+<script src="{% static 'plugins/custom/fullcalendar/fullcalendar.bundle.js' %}"></script>
+{% endcomment %}
+<script src="{% static 'plugins/custom/datatables/datatables.bundle.js' %}"></script>
+<!--end::Page Vendors Javascript-->
+<!--begin::Page Custom Javascript(used by this page)-->
+<script src="{% static 'js/custom/apps/ecommerce/catalog/apps/ecommerce/catalog/save-product.js' %}"></script>
+<script src="{% static 'js/custom/widgets.js' %}"></script>
+<script src="{% static 'js/widgets.bundle.js' %}"></script>
+<script src="{% static 'js/custom/apps/chat/chat.js' %}"></script>
+<script src="{% static 'js/custom/modals/upgrade-plan.js' %}"></script>
+<script src="{% static 'js/custom/modals/create-app.js' %}"></script>
+<script src="{% static 'js/custom/modals/users-search.js' %}"></script>
+<!--end::Page Custom Javascript-->
+<!--end::Javascript-->
+
+<script>
+  $(".datetimepicker-input").flatpickr();
+
+  function remove(pk, url, name = "the item", item_to_remove = "obj-") {
+    Swal.fire({
+      html: `Are you sure you want to remove ${name}?`,
+      icon: "warning",
+      buttonsStyling: false,
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete!",
+      cancelButtonText: "No, cancel",
+      customClass: {
+        confirmButton: "btn btn-danger",
+        cancelButton: "btn btn-default",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+          url: url,
+          data: {
+            pk: pk,
+          },
+          dataType: "json",
+          success: function (data) {
+            if (data.deleted==true) {
+              Swal.fire({
+                text: "Deleted Successfully",
+                icon: "success",
+                buttonsStyling: false,
+                confirmButtonText: "Ok, got it!",
+                customClass: {
+                  confirmButton: "btn btn-primary",
+                },
+              }).then((result) => {
+                $("#" + item_to_remove + pk).remove();
+              });
+            }else{
+              Swal.fire({
+                text: data['deleted'],
+                icon: "error",
+                buttonsStyling: false,
+                confirmButtonText: "Ok, got it!",
+                customClass: {
+                  confirmButton: "btn btn-primary",
+                },
+              });
+            }
+          },
+        });
+      }
+    });
+  }
+</script>

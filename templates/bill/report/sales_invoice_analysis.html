@@ -1,0 +1,82 @@
+{%extends 'base.html'%} 
+{% block pagetitle %} Sales Inovice Analysis {% endblock %} 
+{% block home %} {% url 'bill_list' %} {% endblock %} 
+{% block title %}
+Sales Invoice Analysis
+{% endblock %} 
+{% block content %}
+ {% include 'components/title_bar.html' with title='Sales Invoice Analysis - Customer/Product wise Summary' subtitle_date="True" %}
+<div class="card">
+  {% include 'components/search_filter.html' with show_terminal="yes" search_title="Search" export_url="sales_invoice_analysis" object_list="true" format="xls" %}
+
+
+  <div class="card-body pt-0">
+    <!--begin::Table-->
+    <div
+      id="kt_customers_table_wrapper"
+      class="dataTables_wrapper dt-bootstrap4 no-footer"
+    >
+      {% include 'components/org_header.html' with name="Sales Invoice Analysis" %}
+      <div class="table-responsive">
+        <table
+          class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer"
+          id="kt_customers_table"
+        >
+          <!--begin::Table head-->
+          {%if object_list %}
+          <thead>
+            <!--begin::Table row-->
+            <tr
+              class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0"
+            >
+              <th class="min-w-225px sorting" tabindex="0">Name</th>
+              <th class="min-w-125px sorting" tabindex="0">Unit</th>
+              <th class="min-w-125px sorting" tabindex="0">Quantity</th>
+              <th class="min-w-10px sorting" tabindex="0">Complimentary</th>
+              <th class="min-w-10px sorting" tabindex="0">Avg. Rate</th>
+              <th class="min-w-10px sorting" tabindex="0">Net Amount</th>
+            </tr>
+            <!--end::Table row-->
+          </thead>
+          {%endif%}
+          <tbody class="fw-bold text-gray-600">
+            {% for object in data %}
+            <tr>
+              <td class="text-black">{{object.customer.name}}</td>
+            </tr>
+            {% for item in object.bills%}
+              <tr class="odd" id="obj-{{object.pk}}">
+                <td>{{item.product_title}}</td>
+                <td>{{item.unit_title}}</td>
+                <td>{{item.quantity}}</td>
+                <td>0</td>
+                <td>{{item.rate_new|floatformat:2}}</td>
+                <td>{{item.net_amount|floatformat:2}}</td>
+                {% comment %} <td> {% widthratio item.quantity 1 item.rate_new %} </td> {% endcomment %}
+              </tr>
+            {% endfor %}
+              <tr class="odd" id="obj-{{object.pk}}">
+                <td>Total</td>
+                <td></td>
+                <td>{{object.total.quantity}}</td>
+                <td></td>
+                <td>{{object.total.rate|floatformat:2}}</td>
+                <td>{{object.total.net_amount|floatformat:2}}</td>
+              </tr>
+
+            {%empty%} {% include 'components/empty.html' with title="Result"%}
+            {% endfor %}
+          </tbody>
+          <!--end::Table body-->
+        </table>
+      </div>
+      {%if object_list%} {% include 'pagination.html' %} {%endif%}
+    </div>
+    <!--end::Table-->
+  </div>
+  <!--end::Card body-->
+</div>
+
+<script></script>
+
+{% endblock %}

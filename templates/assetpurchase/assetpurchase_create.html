@@ -1,0 +1,488 @@
+{%extends 'base.html'%} {%load static%} {%block title%} Create {%endblock%}
+{% load tags %}
+{%block content %}
+<div class="card p-2">
+
+<div class="card-body p-4 m-4">
+
+  <h1>{% if title %} {{title}} {% else %} Create {% endif %}</h1>
+    <form method="POST">
+      <input type="hidden" name="select_items_list" id="selected-items-list">
+      <div class="row">
+
+         {% for field in form.visible_fields %}
+
+         {% if field.field.widget.input_type == "text" or field.field.widget.input_type == "number" or field.field.widget.input_type == "datetime-local" or field.field.widget.input_type == "url" or field.field.widget.input_type == "email" or field.field.widget.input_type == "date" %}
+        
+          <div class="col-md-6 fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+
+
+         {% elif field.field.widget.input_type == "textarea" %}
+                <div class="col-md-12 fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+         {% elif  field.field.widget.input_type == "checkbox" %}
+                <div class="row fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+          {% else %}
+
+          {% if field.label == "Discount percentage"%}
+
+          <div class="col-md-3 fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+
+          {% else %}
+
+          <div id="div-{{field.auto_id}}">
+        {% endif %}
+
+          {% endif %}
+            <p class="form-group">
+                  {% if field.label == "Assets" %}
+                  <label>
+                        {{field.label}}
+                  </label>
+                  {{field}}
+                  <div>
+                    <div class="table-responsive mb-8" >
+                      <table class="table align-middle gs-0 gy-4 my-0">
+                        <thead>
+                          <tr>
+                            <th class="w-80px">Remove</th>
+                            <th class="min-w-175px">Name</th>
+                            <th class="w-95px">Depn Pool</th>
+                            <th class="w-85px">Rate</th>
+                            <th class="min-w-100px">Quantity</th>
+                            <th class="w-85px">Taxable</th>
+                            <th class="w-80px">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody  id="bill_item">
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  {% elif field.field.widget.input_type == "checkbox" and field.field.widget.allow_multiple_selected  %}
+                  <label>
+                        {{field}}
+                      <span class="form-check-label fw-bold text-muted" >
+                        {{field.label}}
+                      </span>
+                  </label>
+                  {% else %}
+
+                  <label for="{{field.auto_id}}">{{field.label}}</label>
+                  {{field}}
+                  <div class="fv-plugins-message-container invalid-feedback"><div data-field="daterangepicker_input"> {{field.errors}} </div></div>
+                  {% endif %}
+                  </p>
+                  </div>
+                    {% endfor %}
+          </div>
+
+
+        {% csrf_token %}
+
+
+    <button type="submit" class="btn btn-primary">Create Asset Purchase</button>
+  </form>
+  </div>
+</div>
+
+
+
+{% comment %} {% include 'select2.html' %} {% endcomment %}
+{% endblock %}
+
+
+{% block footer_js %}
+
+<script src="{% static 'js/num2words.js' %}"></script>
+<script type="text/javascript">
+
+    $('#id_assets').select2({
+      tags: true,
+      placeholder: 'Select or Create Asset',
+      createTag: function(params) {
+      const term = $.trim(params.term);
+      
+      // Final validation before tag creation
+      if (/[^a-zA-Z0-9 ]/.test(term)) {
+        alert('Only letters, numbers and hyphens allowed. No spaces or special characters.');
+        return null;
+      }
+      // console.log("This is term before ", term)
+      // hypens_term = term.replace(/ /g, '-')
+      // console.log("This is term after", hyphens_term)
+      return {
+        id: term,
+        // id: term.replace(/ /g, '-'),  // Convert spaces to hyphens for ID
+        text: term,
+        newTag: true
+      };
+    }
+  });
+
+    $('#id_vendor').select2({
+      tags: true,
+      placeholder: 'Select or Create Vendor'
+    })
+
+
+    // Prevent typing spaces and special characters in real-time
+    $(document).on('keydown', '.select2-search__field', function(e) {
+      // Allow navigation and control keys
+      if ([8, 9, 13, 27, 37, 38, 39, 40, 46].includes(e.keyCode) || 
+          (e.ctrlKey && [65, 67, 86, 88].includes(e.keyCode))) {
+        return;
+      }
+      
+      // // Block space (keyCode 32) and special characters
+      // if (e.keyCode === 32 || !/^[a-zA-Z0-9 ]$/.test(e.key)) {
+      //   e.preventDefault();
+      // }
+    // Block hyphen (keyCode 189) but allow space (keyCode 32)
+    if (e.keyCode === 189 || (!/^[a-zA-Z0-9 ]$/.test(e.key) && e.keyCode !== 32)) {
+      e.preventDefault();
+    }
+
+    });
+
+    // Sanitize paste events
+    $(document).on('paste', '.select2-search__field', function(e) {
+      const pasteData = e.originalEvent.clipboardData.getData('text');
+      const sanitized = pasteData.replace(/[^a-zA-Z0-9 ]/g, '');
+      
+      if (pasteData !== sanitized) {
+        alert('Pasted content contained invalid characters - only letters, numbers and hyphens are allowed');
+      }
+      
+      // Replace with sanitized version after paste completes
+      setTimeout(() => {
+        $(this).val(sanitized);
+      }, 0);
+    });
+
+
+  const selectedItems = [];
+  let depreciationPool = []
+  $.ajax({
+        url: `{% settings_value "HOST_URL" %}/api/get-depreciation-pool/`,
+        type: 'GET',
+        success: function(res) {
+          depreciationPool =  res.data
+        }
+      })
+
+$(document).ready(function() {
+   $('#id_').focus();
+  //  $('#div-id_grand_total').num2words();
+    $('#id_grand_total').on('keyup change', function() {
+        const amount = parseFloat($(this).val()) || 0;
+
+        $('#id_amount_in_words').val(convertToIndianRupeesWords(amount));
+    });
+    
+    // Set today's date as default for bill date
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+    $('#id_bill_date').val(formattedDate);
+    
+    $('#id_').focus();
+    $('#id_grand_total').on('keyup change', function() {
+        const amount = parseFloat($(this).val()) || 0;
+        $('#id_amount_in_words').val(convertToIndianRupeesWords(amount));
+    });
+}); 
+
+  function calculatePrices(){
+          let taxableAmount = 0
+          let nonTaxableAmount = 0
+          let idarray = $("#bill_item .text-end")
+                       .find("span") 
+                       .map(function() { return this.id; }) 
+                       .get();
+          let sub_total = idarray.map(e=>$(`#${e}`).html()).reduce((total, current) => {
+                  return parseFloat(total) + parseFloat(current);
+              }, 0);
+
+          let itemsArray = $("#bill_item .check-taxable")
+                    .find("input") 
+                    .map(function() { return this}) 
+                    .get();
+
+          itemsArray.forEach(e =>{
+            let itemName = e.id.split('_')[4]
+            let selectedItemSubTotal = parseFloat(document.getElementById(`id_bill_item_total_${itemName}`).innerText)
+            if(e.checked){
+              taxableAmount += selectedItemSubTotal
+            }else{  
+              nonTaxableAmount += selectedItemSubTotal
+            }
+          })
+
+          $('#id_sub_total').val(taxableAmount+nonTaxableAmount)
+          const subTotal = parseFloat($('#id_sub_total').val())
+
+
+          const discountPercentage = parseInt($('#id_discount_percentage').val())
+          const discountAmount = discountPercentage/100 * subTotal
+          $('#id_discount_amount').val(subTotal*(discountPercentage/100))
+
+          
+          taxableAmount -= discountPercentage/100*taxableAmount
+          nonTaxableAmount -= discountPercentage/100*nonTaxableAmount
+
+
+          $('#id_taxable_amount').val(taxableAmount.toFixed(2))
+          $('#id_non_taxable_amount').val(nonTaxableAmount.toFixed(2))
+          
+          const vatAmount = parseFloat(0.13 * taxableAmount)
+          $('#id_tax_amount').val(vatAmount.toFixed(2))
+
+          $('#id_grand_total').val(parseFloat(taxableAmount+nonTaxableAmount+vatAmount).toFixed(2))
+
+    $('#id_grand_total').keyup();
+  }
+
+  $('#id_assets').on('change', async function () {
+
+    this.options.forEach(option => {
+      if (option.selected) {
+        let item = option.innerText
+        let id = item.replace(/ /g, '-')
+        if (!selectedItems.includes(item)) {
+          selectedItems.push(item)
+          document.getElementById('selected-items-list').value = selectedItems.toString()
+          let billItem = createBillItemAfterSelected(id, item)
+          $('#bill_item').append(billItem)
+          calculatePrices()
+        }
+      }
+    })
+
+  });
+
+
+
+  function calculateTax(event){
+    calculatePrices()
+  }
+
+  function removeItemFromBill(event){
+
+    const elementIdTagArray = event.id.split('_')
+    const item = elementIdTagArray[elementIdTagArray.length -1]
+    const ind = selectedItems.indexOf(item)
+    selectedItems.splice(ind,1)
+    
+    const tableBody = document.querySelector('#bill_item');
+    const tableRow = document.querySelector(`#id_bill_item_${item}`)
+    tableBody.removeChild(tableRow)
+    document.getElementById('selected-items-list').value = selectedItems.toString()
+    calculatePrices()
+  }
+
+  function createBillItemAfterSelected(id, title, is_taxable=true){
+    let quantity = 1
+    let total = 0
+    // console.log(depreciationPool)
+    let selectElement = document.createElement('select')
+    // let id = id.replace(/ /g, '-')
+    selectElement.setAttribute('name', `id_depn_${id}`)
+    selectElement.setAttribute('class', 'form-control')
+    console.log(id)
+    // console.log(typeof depreciationPool)
+    depreciationPool.forEach(i =>{
+      let optionElement = document.createElement('option')
+      optionElement.value = i.id
+      optionElement.text= `${i.label} - ${i.percentage}% `
+      selectElement.appendChild(optionElement)
+    })
+
+    return `<tr data-kt-pos-element="item" id="id_bill_item_${id}">
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <span class="fw-bold text-gray-800 cursor-pointer text-hover-primary fs-6 me-1"> 
+                        <button onclick="removeItemFromBill(this)" id="remove_${id}" type="button" class="btn btn-danger"> X </button>
+                          </span>
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <span class="fw-bold text-gray-800 cursor-pointer text-hover-primary fs-6 me-1" id="id_title_${id}">${title}</span>
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      ${selectElement.outerHTML}
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="d-flex align-items-center">
+                      <input type="text" class="form-control" placeholder="Rate" id="id_bill_item_rate_${id}" name="id_bill_item_rate_${id}" value="1" onkeyup="handleRateChange(this)">
+                    </div>
+                  </td>
+                  <td class="pe-0">
+                    <div class="position-relative d-flex align-items-center" data-kt-dialer="true" data-kt-dialer-min="1" data-kt-dialer-max="10" data-kt-dialer-step="1" data-kt-dialer-decimals="0">
+                      <button type="button" class="btn btn-icon btn-sm btn-light btn-icon-gray-400" data-kt-dialer-control="decrease" id="${id}"  onclick="handleQuantity(this,'decrease')">
+                        <span class="svg-icon svg-icon-3x">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="6" y="11" width="12" height="2" rx="1" fill="currentColor"></rect>
+                          </svg>
+                        </span>
+                      </button>
+                <input type="text" class="form-control border-0 text-center px-0 fs-3 fw-bold text-gray-800 w-30px" data-kt-dialer-control="input"   id="id_bill_item_quantity_${id}" onkeyup="handleQuantity(this,'set')" name="id_bill_item_quantity_${id}" value="${quantity}">
+                      <button type="button" class="btn btn-icon btn-sm btn-light btn-icon-gray-400" data-kt-dialer-control="increase" id="${id}" onclick="handleQuantity(this,'increase')">
+                        <span class="svg-icon svg-icon-3x">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect opacity="0.5" x="11" y="18" width="12" height="2" rx="1" transform="rotate(-90 11 18)" fill="currentColor"></rect>
+                            <rect x="6" y="11" width="12" height="2" rx="1" fill="currentColor"></rect>
+                          </svg>
+                        </span>
+                      </button>
+                    </div>
+                  </td>
+
+                  <td class="pe-0 check-taxable">
+                    <div class="d-flex align-items-center">
+                      <input type="checkbox" id="id_bill_item_taxable_${id}" name="id_bill_item_taxable_${id}" checked onchange="calculateTax(this)"> 
+                    </div>
+                  </td>
+
+                  <td class="text-end">
+                    <span class="fw-bold text-primary fs-2" data-kt-pos-element="item-total" id="id_bill_item_total_${id}" taxable="${is_taxable}" >${total}</span>
+                  </td>
+                </tr>
+              `
+  }
+
+
+  // Modify the handleRateChange function to allow decimals:
+  async function handleRateChange(e){
+    const id = e.id.split('_')[4]
+    const quantity = $(`#id_bill_item_quantity_${id}`).val()
+    
+    // Sanitize rate input
+    const rateValue = e.value.replace(/[^0-9.]/g, '')
+                            .replace(/(\..*)\./g, '$1');
+    e.value = rateValue;
+    
+    const total = parseFloat(rateValue) * parseFloat(quantity)
+    $(`#id_bill_item_total_${id}`).html(parseFloat(total).toFixed(2))
+    calculatePrices()
+  }
+
+// Modify the handleQuantity function to allow decimals:
+function handleQuantity(e,option) {
+  let id;
+  if(option=='set'){
+    id = e.id.split('_')[4]
+  }else{
+    id = e.id 
+  }
+  const currentQuantity = $(`#id_bill_item_quantity_${id}`).val()
+  const rate = $(`#id_bill_item_rate_${id}`).val()
+  let total; 
+  if(option=='increase'){
+    const newQuantity = parseFloat(currentQuantity) + 1
+    $(`#id_bill_item_quantity_${id}`).val(newQuantity)
+    total = newQuantity * parseFloat(rate)
+  }else if(option=='decrease'){
+    if(currentQuantity>0){
+      const newQuantity = parseFloat(currentQuantity) - 1
+      $(`#id_bill_item_quantity_${id}`).val(newQuantity)
+      total = newQuantity * parseFloat(rate)
+    }
+  } else if (option=='set'){
+    const rawInput = $(`#${e.id}`).val();
+    
+    // Sanitize input - allow only numbers and one decimal point
+    const sanitizedInput = rawInput
+      .replace(/[^0-9.]/g, '')  // Remove all non-numeric characters except '.'
+      .replace(/(\..*)\./g, '$1');  // Allow only one decimal point
+
+    const quantity = parseFloat(sanitizedInput) || 0;
+
+    $(`#id_bill_item_quantity_${id}`).val(sanitizedInput);
+
+    // Calculate total only if quantity is positive
+    if (quantity > 0) {
+      total = quantity * parseFloat(rate);
+    }
+  }
+  
+  $(`#id_bill_item_total_${id}`).html(parseFloat(total).toFixed(2))
+  calculatePrices()
+}
+
+ $('#id_discount_percentage').on('change', function() {
+     calculatePrices()
+  })
+
+
+function convertToIndianRupeesWords(num) {
+    const singleDigits = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const doubleDigits = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tensMultiple = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    const placeValues = ['', 'Thousand', 'Lakh', 'Crore'];
+
+    function getTwoDigitWords(n) {
+        if (n < 10) return singleDigits[n];
+        if (n < 20) return doubleDigits[n - 10];
+        const tens = Math.floor(n / 10);
+        const units = n % 10;
+        return tensMultiple[tens] + (units ? ' ' + singleDigits[units] : '');
+    }
+
+    function getThreeDigitWords(n) {
+        const hundred = Math.floor(n / 100);
+        const rest = n % 100;
+        let result = '';
+        if (hundred > 0) result += singleDigits[hundred] + ' Hundred';
+        if (rest > 0) result += (result ? ' ' : '') + getTwoDigitWords(rest);
+        return result;
+    }
+
+    function convertWholeNumberIndianStyle(n) {
+        if (n === 0) return 'Zero';
+
+        const parts = [];
+
+        const units = n % 1000;
+        n = Math.floor(n / 1000);
+        parts.push(units);
+
+        while (n > 0) {
+            parts.push(n % 100);
+            n = Math.floor(n / 100);
+        }
+
+        const words = [];
+        for (let i = parts.length - 1; i >= 0; i--) {
+            if (parts[i]) {
+                const word = i === 0 ? getThreeDigitWords(parts[i]) : getTwoDigitWords(parts[i]);
+                const place = placeValues[i] || '';
+                words.push(word + (place ? ' ' + place : ''));
+            }
+        }
+
+        return words.join(' ');
+    }
+
+    const decimalSplit = num.toString().split('.');
+    const whole = parseInt(decimalSplit[0]);
+    const decimal = decimalSplit[1] ? parseInt(decimalSplit[1].substring(0, 2)) : null;
+
+    let result = convertWholeNumberIndianStyle(whole) + ' Rupees';
+
+    if (decimal && !isNaN(decimal) && decimal > 0) {
+        result += ' and ' + getTwoDigitWords(decimal) + ' Paisa';
+    }
+
+    return result;
+}
+
+
+</script>
+
+
+
+
+{% endblock %}

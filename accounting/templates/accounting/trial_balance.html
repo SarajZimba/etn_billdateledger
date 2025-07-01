@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block pagetitle %}Trial Balance {% endblock %}
+{% block home %} {% url 'trial_balance_view' %} {% endblock %}
+{% block title %} Trial Balance {% endblock %}
+{% block content %}
+    {% include 'components/title_bar.html' with title=' Trial Balance ' %}
+    <style>
+        td {
+            letter-spacing: 1px;
+        }
+    </style>
+    <div class="mb-4 form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="toggle-trial" {% if trial_active %}checked{% endif %}>
+        <label class="form-check-label" for="toggle-trial">Show zero value subledgers</label>
+    </div>
+    <a href="{% url 'export_trial_balance' %}?fromDate={{request.GET.fromDate}}&toDate={{request.GET.toDate}}&option={{request.GET.option}}" class="btn btn-primary">Export</a>
+    <div class="card">
+        <section>
+            {% include 'accounting/filter.html' %}
+        </section>
+        <div class="card" id="printTable">
+            <center class="m-auto">
+                {% if org_global %}
+                    <h2>{{org_global.org_name}}</h2> <br>
+                {% endif %}
+            </center>
+            <h2 class="text-center">Trial Balance</h2> <br>
+            <h6 class="text-primary px-6" style="text-align: right;"> Current Fiscal Year : {{current_fiscal_year}}</h6>
+            <div class="card-header p-4 m-auto">
+                <center>
+                    {% if from_date and to_date %}
+                        <p class="fw-bolder">For the period of : {{from_date}} &nbsp; - &nbsp; {{to_date}}</p>
+                    {% else %}
+                        <p class="fw-bolder">For the period of : {{first_date}} &nbsp; - &nbsp; {{last_date}}</p>
+                    {% endif %}
+                </center>
+            </div>
+            <div class="card-body pt-0">
+                <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_customers_table">
+                            <thead class="fw-bolder">
+                                <th>Ledger</th>
+                                {% if openclose %}
+                                    <th>Opening</th>
+                                {% endif %}
+                                <th>Debit</th>
+                                <th>Credit</th>
+                                {% if openclose %}
+                                    <th>Closing</th>
+                                {% endif %}
+                            </thead>
+                            <tbody class="fw-bold text-gray-600">
+                                <script>
+                                    var accountTypes = [];
+                                </script>   
+                                <!--{{trial_balance}}-->
+                                {% for data in trial_balance %}
+                                <script>
+                                    // Check if data.real_account_type is not in accountTypes
+                                    if (accountTypes.indexOf("{{ data.real_account_type }}") === -1) {
+                                        accountTypes.push("{{ data.real_account_type }}");
+                                        document.write('<tr><td class="fw-bolder text-info">{{ data.real_account_type }}</td><td colspan="4"></td></tr>');
+                                    }
+                                    var opened = -1;
+                                </script>
+                                    {% for group in data.groups %}
+                                        <tr>
+                                            <td class="fw-bolder text-primary p-5">{{ group.group }}</td>
+                                        </tr>
+                                        {% for led in group.ledgers %}
+                                            <tr style="margin-left: 50px;">
+                                                <td>
+                                                <!-- <span style="color: rgb(99, 97, 97)" class="ledger-click" onclick="toggleSubDetails(this)">
+                                                    {{led.ledger}}
+                                                </span> -->
+                                                
+                                                <span style="color: rgb(99, 97, 97);cursor: pointer;" class="ledger-click p-5" onclick="showDetails()">
+                                                    {{led.ledger}}
+                                                </span>                                                
+                                                </td>
+                                                {% if openclose %}
+                                                    <td>{{ led.opening| intcomma }}</td>
+                                                {% endif %}
+                                                <td>{{ led.debit|intcomma }}</td>
+                                                <td>{{ led.credit|intcomma }}</td>
+                                                {% if openclose %}
+                                                    <td>{{ led.closing|intcomma }}</td>
+                                                {% endif %}
+                                                {% for subledger in led.subledgers%}
+                                                
+                                                    <tr class = "sub-details" style="display: none;"><td class="p-5">{{subledger.subledger}} -> <span class="text-primary">({{subledger.total_value}})</span>  </td>
+                                                    </tr>
+                                                
+                                                {% endfor %}
+
+                                            </tr>
+                                        {% endfor %}
+                                    {% endfor %}
+                                {% endfor %}
+                                <hr>
+                                <tr>
+                                    <td>Total</td>
+                                    {% if openclose %}
+                                        <td></td>
+                                    {% endif %}
+                                    <td>
+                                        <p class="fw-bolder text-primary">{{ total.debit_total|intcomma }}</p>
+                                    </td>
+                                    <td>
+                                        <p class="fw-bolder text-primary">{{ total.credit_total|intcomma }}</p>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if object_list %}
+                        {% include 'pagination.html' %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <button type="button" class="btn btn-success my-1 me-12" onclick="printTable('printTable');">Print</button>
+
+    <script type="text/javascript">
+        function printTable(tableId) {
+            var printContents = document.getElementById(tableId).innerHTML
+            var originalContents = document.body.innerHTML
+
+            // Hide Elements with no-print class
+            var noPrintElements = document.querySelectorAll('no-print')
+
+            for (var i = 0; i < noPrintElements.length; i++) {
+                noPrintElements[i].style.display = 'none'
+            }
+
+            document.body.innerHTML = printContents
+
+            window.print()
+
+            document.body.innerHTML = originalContents
+
+            for (var i = 0; i < noPrintElements.length; i++) {
+                noPrintElements[i].style.display = 'block'
+            }
+        }
+
+        console.log(accountTypes)
+
+    // function showDetails(){
+    //     let subDetails = document.querySelectorAll('sub-details');
+
+    //     subDetails.forEach(subDetail) => {
+
+    //     }
+
+    // }
+
+    function showDetails() {
+            // Get all elements with the class 'sub-details'
+            let subDetails = document.querySelectorAll('.sub-details');
+            
+            // Toggle the display for each sub-detail row
+            subDetails.forEach((subDetail) => {
+                if (subDetail.style.display === 'none' || !subDetail.style.display) {
+                   subDetail.style.display = 'table-row';  // Show the sub-detail row
+                } else {
+                   subDetail.style.display = 'none';       // Hide the sub-detail row
+               }
+            });
+     }
+
+     document.getElementById('toggle-trial').addEventListener('change', async function() {
+      const isChecked = this.checked;
+      const response = await fetch('/api/trialbalance/toggle/', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'  // Ensure you have CSRF token available in your template
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({ active: isChecked })
+      });
+      if (response.ok) {
+          const data = await response.json();
+          console.log(data.message);  // Optionally handle success message or UI update
+          // Reload the page or update UI as needed
+      } else {
+          console.error('Failed to toggle flag menu');
+          this.checked = !isChecked;  // Revert toggle switch state on failure
+      }
+  });
+
+    </script>
+{% endblock %}

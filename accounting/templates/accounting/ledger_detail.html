@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block pagetitle %} Ledger Details {% endblock %}
+{% block home %} {% url 'trial_balance_view' %} {% endblock %}
+{% block title %} Ledger Details {% endblock %}
+{% block content %}
+{% include 'components/title_bar.html' with title=' Ledger Details' %}
+
+
+<div class="card p-2 no-print ">
+    <a href="#" onclick="goBack()"> Return Back </a>
+    <div class="card-body p-4 m-4">
+        <h1>Ledger - {{ ledger.ledger_name }}</h1>
+        <p>Account Chart: {{ ledger.account_chart }}</p>
+        <p>Remaining Balance: {{ ledger.total_value }}</p>
+        
+    </div>
+</div>
+
+<style>
+    td{
+        letter-spacing: 1px;
+    }
+</style>
+<div class="card">
+    <section>
+        {% include 'accounting/filter.html' %}
+    </section>
+    <div class="card" id="printTable">
+        <h1 class="text-center">Dhamma Design Nepal</h1>
+        <h3 class="text-center">Account Chart : {{ledger.account_chart}}</h3>
+        <h6 class="text-primary px-6"  style="text-align: right;"> Current Fiscal Year : {{current_fiscal_year}}</h6>
+
+    <div class="card-header p-4 m-auto">
+        <center>
+                {% if from_date and to_date %}
+                    <p class="fw-bolder">For the period of : {{from_date}} &nbsp; - &nbsp; {{to_date}}</p>
+                {% else %}
+                    <p class="fw-bolder">For the period of : {{first_credit_date}} &nbsp; - &nbsp; {{last_credit_date}}</p>
+
+                {% endif %}
+        </center>
+    </div>
+    <div class="card-body pt-0">
+        <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+            <div class="table-responsive">
+                <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer"
+                    id="kt_customers_table">
+                    {{credit_payingentries}}
+
+                    <thead class="fw-bolder">
+                        <th>Date</th>
+                        <th>Account</th>
+                        <th>Particulars</th>
+                        <!-- {% if openclose %}
+                            <th>Opening</th>
+                        {% endif %} -->
+                       
+                        <th>Debit</th>
+                        <th>Credit</th>
+                        <!-- {% if openclose %}
+                            <th>Closing</th>
+                        {% endif %} -->
+                    </thead>
+                    <tbody class="fw-bold text-gray-600">
+
+                     <!-- {% for entry in entries %}
+                        <tr>
+                            <td class="fw-bolder">{{entry.created_at}}</td>
+                            
+                            <td class="fw-bolder">
+                                {% for credit_entry in credit_payingentries %}
+                                    {{ credit_entry.ledger }}
+                                    {% if not forloop.last %},{% endif %}
+                                {% endfor %}
+                            </td>
+                               <td></td>  
+                            <td class="fw-bolder text-info">{{entry.particulars}}</td>
+                            <td class="fw-bolder">{{entry.debit_amount}}</td>
+                            <td class="fw-bolder">{{entry.credit_amount}}</td>
+                            
+                        </tr>
+                        {% endfor %} -->
+                        <!-- {{sorted_details}} -->
+                     {% for entry in sorted_details %}
+                        <tr>
+                            <td class="fw-bolder">{{ entry.date.0 }}</td>
+                            
+                            <td class="fw-bolder">
+                                    {{entry.payers}}
+                            </td>
+                            
+                            <td class="fw-bolder text-info">{{ entry.particulars|join:", " }}
+                            </td>
+                            <td class="fw-bolder">{{entry.debit.0}}</td>
+                            <td class="fw-bolder">{{entry.credit.0}}</td>
+                            
+                        </tr>
+                        {% endfor %}
+                    
+                        <hr>
+                        <tr>
+                            <td>Total</td>
+                            <!-- {% if openclose %}
+                                <td></td>
+                            {% endif %} -->
+                            <td></td>
+                            <td></td>
+                            
+                            <td><p class="fw-bolder text-primary">{{total_debit|intcomma}}</p> </td>
+                            
+                            
+                            <td><p class="fw-bolder text-primary">{{total_credit|intcomma}}</p></td>
+                            
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Opening Balance</td>
+                            <!-- {% if openclose %}
+                                <td></td>
+                            {% endif %} -->
+                            <td></td>
+                            <td></td>
+                            
+                            {% if opening_balance != 0 %}
+                            
+                            <!-- <td></td> -->
+                            <td><p class="fw-bolder text-success">{{opening_balance.debit|intcomma}}</p></td>
+                            <td><p class="fw-bolder text-danger">{{opening_balance.credit|intcomma}}</p></td>
+                            {% elif opening_balance == 0 %}
+                            
+                            <td></td>
+                            <td><p class="fw-bolder text-danger">0</p></td>
+                            {% endif %}
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Closing Balance</td>
+                            <!-- {% if openclose %}
+                                <td></td>
+                            {% endif %} -->
+                            
+                            {% if neg == 1 %}
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td><p class="fw-bolder text-danger">{{closing_balance|intcomma}}</p> </td>
+                            
+                            {% elif neg == 0 %}
+                            <td></td>
+                            <td></td>
+                            <td><p class="fw-bolder text-success">{{closing_balance|intcomma}}</p> </td>
+                            
+                            {% elif closing_balance == 0 %}
+                            
+                            <td></td>
+                            <td><p class="fw-bolder text-success">0</p></td>
+                            {% endif %}
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        {%if neg != 2 %}
+                            {% if neg == 1 %}
+                            <tr><td><a href="{% url 'partyledger_journal' ledger.id %}"><button class=" btn btn-info">Make payment</button></a></td></tr>
+                            {% elif neg == 0 %}
+                            <tr><td><a href="{% url 'partyledger_journal1' ledger.id%}"><button class="btn btn-info">Receive Payment</button></a></td></tr>
+                            {% endif %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            {%if object_list%}
+            {% include 'pagination.html' %}
+            {%endif%}
+        </div>
+    </div>
+</div>
+</div>
+<button type="button" class="btn btn-success my-1 me-12" onclick="printTable('printTable');">Print</button>
+
+
+<script type="text/javascript">
+
+function printTable(tableId){
+    var printContents = document.getElementById(tableId).innerHTML;
+    var originalContents = document.body.innerHTML;
+
+    //Hide elements with no-print class
+
+    var noPrintElements = document.querySelectorAll('.no-print');
+
+    for(var i = 0; i < noPrintElements.length ; i++ ){
+        noPrintElements[i].style.display = 'none';
+    }
+
+    document.body.innerHTML = printContents;
+
+    window.print()
+
+    document.body.innerHTML = originalContents
+
+    for(var i = 0; i < noPrintElements.length ; i++ ){
+        noPrintElements[i].style.display = 'block';
+    }
+
+
+}
+
+function goBack() {
+            window.history.back();
+        }
+
+</script>
+{% endblock %}

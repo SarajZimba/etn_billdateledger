@@ -1,0 +1,5 @@
+{%if  status|upper == "TRUE"%}
+    <span class="badge badge-light-success text-uppercase">{%if true_message%} {{true_message}} {%else%} Active {%endif%}   </span>
+{%else%}
+    <span class="badge badge-light-danger text-uppercase">{%if false_message%} {{false_message}} {%else%}  Inactive {%endif%}  </span>
+{%endif%}

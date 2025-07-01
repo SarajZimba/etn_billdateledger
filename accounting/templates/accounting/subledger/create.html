@@ -1,0 +1,77 @@
+{%extends 'base.html'%} {%load static%} {%block title%} Create {%endblock%}
+{%block content %}
+<div class="card p-2">
+
+<div class="card-body p-4 m-4">
+
+  <h1>{% if title %} {{title}} {% else %} Create {% endif %}</h1>
+    <form enctype="multipart/form-data" method="POST" onsubmit="document.querySelector('#id_ledger').disabled=false" >
+      <div class="row">
+         {% for field in form.visible_fields %}
+
+         <!-- {{field.field.widget.input_type}} -->
+         {% if field.field.widget.input_type == "text" or field.field.widget.input_type == "number" or field.field.widget.input_type == "datetime-local" or field.field.widget.input_type == "url" or field.field.widget.input_type == "email" or field.field.widget.input_type == "date" %}
+         <div class="col-md-7 fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+         {% elif field.field.widget.input_type == "textarea" or field.field.widget.input_type == "checkbox" %}
+                <div class="col-md-12 fv-row fv-plugins-icon-container" id="div-{{field.auto_id}}">
+          {% else %}
+                  <div id="div-{{field.auto_id}}">
+          {% endif %}
+            <p class="form-group">
+                  {% if field.field.widget.input_type == "checkbox" %}
+                  <label class="form-check form-switch form-check-custom form-check-solid">
+                        {{field}}
+                      <span class="form-check-label fw-bold text-muted" for="kt_modal_add_customer_billing">
+                        {{field.label}}
+                      </span>
+                    </label>
+                  {% else %}
+                  <label for="{{field.auto_id}}">{{field.label}}</label>
+                  {{field}}
+                  <div class="fv-plugins-message-container invalid-feedback"><div data-field="daterangepicker_input"> {{field.errors}} </div></div>
+                  {% endif %}
+                  </p>
+                  </div>
+                    {% endfor %}
+          </div>
+
+
+    {% csrf_token %}
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+
+  </div>
+</div>
+
+<script>
+
+    const validAccountTypes= ['Asset', 'Liability', 'Equity', 'Revenue', 'Expense', 'Other']
+
+    const params = new Proxy(new URLSearchParams(window.location.search), {
+    get: (searchParams, prop) => searchParams.get(prop),
+    });
+    let accountType = params.accountType
+    let ledgerType = params.ledgerType
+
+    if(validAccountTypes.includes(accountType)){
+        document.querySelector('#id_account_type').value=accountType
+    }else{
+        // alert('Please select valid account type')
+    }
+
+    const selectElement = document.querySelector('#id_ledger') || null
+
+    if(selectElement){
+        selectElement.disabled = true;
+      for (let i of selectElement.options){
+        if(i.label === ledgerType ){
+          i.selected=true
+        }
+      }
+
+    }
+</script>
+
+
+{% endblock %}

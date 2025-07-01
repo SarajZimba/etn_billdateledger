@@ -1,0 +1,83 @@
+{%extends 'base.html'%}
+{% block pagetitle %}Party Wise Sales Register- VAT Details{% endblock %}
+{% block home %} {% url 'bill_list' %} {% endblock %}
+{% block title %}Party Wise Sales Register- VAT Details{% endblock %}
+{% block content %}
+ {% include 'components/title_bar.html' with title='Party Wise Sales Register- VAT Details' subtitle_date="True"  %}
+                <div class="card">
+
+                {% include 'components/search_filter.html' with show_terminal="yes"  search_title="Search" export_url="party_wise_sales" object_list="true" format="xls"  %} 
+
+
+    <div class="card-body pt-0">
+    <!--begin::Table-->
+    <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+      {% include 'components/org_header.html' with name="Party Sales Register" %}
+      <div class="table-responsive">
+        <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_customers_table">
+          <!--begin::Table head-->
+          {%if object_list%}
+          <thead>
+            <!--begin::Table row-->
+            <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+
+              <th class="min-w-225px sorting" tabindex="0" >Customer Name</th>
+              <th class="min-w-125px sorting" tabindex="0" >VAT Number</th>
+              <th class="min-w-125px sorting" tabindex="0">Sales Amount</th>
+              <th class="min-w-10px sorting" tabindex="0">Exempted Sales</th>
+              <th class="min-w-10px sorting" tabindex="0">Export</th>
+              <th class="min-w-10px sorting" tabindex="0">Taxable Sales</th>
+              <th class="min-w-10px sorting" tabindex="0">Tax</th>
+            </tr>
+            <!--end::Table row-->
+          </thead>
+          {%endif%}
+          <tbody class="fw-bold text-gray-600">
+
+          {% for object in object_list %}
+             <tr class="odd" id="obj-{{object.pk}}">
+                <td>{{object.0}}</td>
+                <td>{{object.1|floatformat}}</td>
+                <td>{{object.2|floatformat:2}}</td>
+                <td>{{object.3|floatformat:2}}</td>
+                <td>-</td>
+                <td>{{object.4|floatformat:2}}</td>
+                <td>{{object.5|floatformat:2}}</td>
+                <td>
+                  <span class="badge badge-light-success text-uppercase"> {{object.payment_mode}}</span>
+                </td>
+             </tr>
+             {%empty%}
+             {% include 'components/empty.html' with  title="Result"%}
+              {% endfor %}
+
+            {% if object_list %}
+            <tr>
+              <td><h3>Total </h3> </td>
+              <td></td>
+              <td><h4>{{total.amount|floatformat:2}}</h4> </td>
+              <td><h4>{{total.exemptedSales|floatformat:2}}</h4> </td>
+              <td></td>
+              <td><h4>{{total.taxable_amount|floatformat:2}} </h4> </td>
+              <td><h4>{{total.tax_amount|floatformat:2}} </h4> </td>
+            </tr>
+            {% endif %}
+
+          </tbody>
+          <!--end::Table body-->
+        </table>
+      </div>
+    {%if object_list%}
+      {% include 'pagination.html' %}
+    {%endif%}
+    </div>
+    <!--end::Table-->
+  </div>
+  <!--end::Card body-->
+</div>
+
+<script>
+</script>
+
+{% endblock %}
+

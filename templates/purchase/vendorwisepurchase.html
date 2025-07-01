@@ -1,0 +1,126 @@
+
+{%extends 'base.html'%}
+{% block pagetitle %}Purchase List {% endblock %}
+{% block home %} {% url 'product_purchase_list' %} {% endblock %}
+{% block title %}Purchase List {% endblock %}
+{% block content %}
+ {% include 'components/title_bar.html' with title=' Vendor wise purchase'  %}
+                <div class="card">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="accordion mb-5" id="accordionExample">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingOne">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                            Select Date
+                                        </button>
+                                    </h2>
+                                    <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+                                        data-bs-parent="#accordionExample">
+                                        <div class="accordion-body">
+                                            <div>
+                                                <form action="." method="GET">
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label for="">From Date</label>
+                                                            <input type="date" name="from_date" class="form-control"
+                                                                value="{{request.GET.date}}" required>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label for="">To Date</label>
+                                                            <input type="date" name="to_date" class="form-control"
+                                                                value="{{request.GET.date}}" required>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <input type="submit" value="Filter" class="btn btn-primary">
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+    <div class="card-body pt-0">
+    <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+      <div class="table-responsive">
+        <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_customers_table">
+          <!--begin::Table head-->
+          {%if object_list%}
+          <thead>
+            <!--begin::Table row-->
+            <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+       
+              <th class="min-w-225px sorting" tabindex="0" > Vendor</th>
+              <th class="min-w-225px sorting"> Date</th>
+              <th class="min-w-225px sorting"> Bill no</th>
+
+              <th class="min-w-225px sorting"> Item</th>
+              <th class="min-w-225px sorting"> Group</th>
+              <th class="min-w-225px sorting"> Rate</th>
+              <th class="min-w-225px sorting"> Quantity</th>
+              <th class="min-w-225px sorting"> Unit</th>
+              <th class="min-w-225px sorting"> Tax Amount</th>
+              <th class="min-w-225px sorting"> Total</th>
+
+
+
+
+
+
+            </tr>
+            <!--end::Table row-->
+          </thead>
+          {%endif%}
+          
+          <tbody class="fw-bold text-gray-600">
+
+          {% for object in object_list %}
+             <tr class="odd" id="obj-{{object.pk}}">
+                <td>{{object.name}}</td>
+                {% for purchase in object.purchases %}
+                    {% for item in purchase.productpurchase_set.all %}
+                        <tr>
+                            <td></td>
+                            <td>{{item.purchase.created_at| date}}</td>
+                            <td>{{item.purchase.bill_no}}</td>
+                            <td>{{item.product.title}}</td>
+                            <td>{{item.product.category}}</td>
+                            <td>{{item.rate}}</td>
+                            <td>{{item.quantity}}</td>
+                            <td>{{item.product.unit}}</td>
+                            <td>{{item.purchase.tax_amount}}</td>
+                            <td>{{item.purchase.grand_total}}</td>
+
+
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+             </tr>
+             {%empty%}
+             {% include 'components/empty.html' with  title="Data"%}
+              {% endfor %}
+
+          </tbody>
+          <!--end::Table body-->
+        </table>
+      </div>
+    {%if object_list%}
+      {% include 'pagination.html' %}
+    {%endif%}
+    </div>
+    <!--end::Table-->
+  </div>
+  <!--end::Card body-->
+</div>
+
+<script>
+</script>
+
+{% endblock %}
+
+
+

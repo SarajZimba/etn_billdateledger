@@ -1,0 +1,8 @@
+<div class="menu-item">
+    <a class="menu-link {%if path in request.path%} active {%endif%}" href="{%  url url %}">
+        <span class="menu-icon">
+            <i class="{{icon}} fs-3"></i>
+        </span>
+        <span class="menu-title"> {{title}}</span>
+    </a>
+</div>

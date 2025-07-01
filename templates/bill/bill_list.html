@@ -1,0 +1,92 @@
+
+{%extends 'base.html'%}
+{% block pagetitle %}Bill List {% endblock %}
+{% block home %} {% url 'bill_list' %} {% endblock %}
+{% block title %}Bill List {% endblock %}
+{% block content %}
+ {% include 'components/title_bar.html' with title=' Bill List '  %}
+                <div class="card">
+
+                {% include 'components/search_filter.html' with show_terminal="yes"  search_title="Search Bill" create_button="New Bill" create_url="bill_create" %} 
+
+
+    <div class="card-body pt-0">
+    <!--begin::Table-->
+    <div id="kt_customers_table_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+      <div class="table-responsive">
+        <table class="table align-middle table-row-dashed fs-9 gy-5 dataTable no-footer" id="kt_customers_table">
+          <!--begin::Table head-->
+          {%if object_list%}
+          <thead>
+            <!--begin::Table row-->
+            <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+       
+              <th class="min-w-125px sorting" tabindex="0" > Date Time</th>
+              <th class="min-w-50px sorting" tabindex="0" > Miti</th>
+              <th class="min-w-50px sorting" tabindex="0" > Bill No.</th>
+              <th class="min-w-10px sorting" tabindex="0" > Void</th>
+              <th class="min-w-10px sorting" tabindex="0" > Terminal</th>
+              <th class="min-w-50px sorting " tabindex="0" > Employee</th>
+              <th class="min-w-50px sorting" tabindex="0" > Customer</th>
+              <th class="min-w-50px sorting" tabindex="0" > S.Total</th>
+              <th class="min-w-50px sorting" tabindex="0" > Dis Amt.</th>
+              <th class="min-w-50px sorting" tabindex="0" > Taxable</th>
+              <th class="min-w-50px sorting" tabindex="0" > Tax Amt</th>
+              <th class="min-w-50px sorting" tabindex="0" > G.Total</th>
+              <th class="min-w-50px sorting" tabindex="0" > Mode</th>
+            </tr>
+            <!--end::Table row-->
+          </thead>
+          {%endif%}
+          <tbody class="fw-bold text-gray-600">
+
+          {% for object in object_list %}
+             <tr class="odd" id="obj-{{object.pk}}">
+             
+
+                <td> <a href="{%url 'bill_detail' object.id%}">  {{object.transaction_date_time}} </a></td>
+                <td>{{object.transaction_miti}}</td>
+                
+                <td>{{object.invoice_number}}</td>
+                <td>
+
+                  {% include "components/status.html" with status=object.status true_message="NO" false_message="YES" %}
+                </td>
+                <td>{{object.terminal}}</td>
+                <td>{{object.agent.full_name}}</td>
+                <td>{{object.customer.name}}</td>
+                <td>{{object.sub_total}}</td>
+                <td>{{object.discount_amount}}</td>
+                <td>{{object.taxable_amount}}</td>
+                <td>{{object.tax_amount}}</td>
+                <td>{{object.grand_total}}</td>
+
+
+                <td>
+                  <span class="badge badge-light-success text-uppercase"> {{object.payment_mode}}</span>
+                </td>
+  
+ 
+             </tr>
+             {%empty%}
+             {% include 'components/empty.html' with  title="Bill"%}
+              {% endfor %}
+
+          </tbody>
+          <!--end::Table body-->
+        </table>
+      </div>
+    {%if object_list%}
+      {% include 'pagination.html' %}
+    {%endif%}
+    </div>
+    <!--end::Table-->
+  </div>
+  <!--end::Card body-->
+</div>
+
+<script>
+</script>
+
+{% endblock %}
+

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<htmllang="en">
+
+    <head>
+        <metacharset="UTF-8" />
+        <title>End Day Report</title>
+        <style>
+            table,
+            th,
+            td {
+                border: 1px solid rgb(117, 114, 114);
+                border-collapse: collapse;
+                font-family: Roboto;
+                padding: 5px;
+            }
+
+            table th {
+                background-color: rgb(229, 200, 74);
+                ;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h3>Here is the summary report for today</h3>
+        <p>{{org_name}}, {{branch}}</p>
+        <p>Date: {{date_now}}</p>
+        <p>Conducted at: {{time_now}}</p>
+
+        <table>
+            <tbody>
+                <tr>
+                    <th>Branch</th>
+                    <td>{{branch}}</td>
+                </tr>
+
+                <tr>
+                    <th>Terminal</th>
+                    <td>{{terminal}}</td>
+                </tr>
+
+                <tr>
+                    <th>DateTime</th>
+                    <td>{{date_time}}</td>
+                </tr>
+
+                <tr>
+                    <th>Total Sale</th>
+                    <td>{{total_sale}}</td>
+                </tr>
+
+                <tr>
+                    <th>Net Sales</th>
+                    <td>{{net_sales}}</td>
+                </tr>
+
+                <tr>
+                    <th>VAT</th>
+                    <td>{{vat}}</td>
+                </tr>
+
+                <tr>
+                    <th>Food Sale</th>
+                    <td>{{food_sale}}</td>
+                </tr>
+
+                <tr>
+                    <th>Beverage Sale</th>
+                    <td>{{beverage_sale}}</td>
+                </tr>
+
+                <tr>
+                    <th>Others Sale</th>
+                    <td>{{others_sale}}</td>
+                </tr>
+
+                <tr>
+                    <th>Cash</th>
+                    <td>{{cash}}</td>
+                </tr>
+
+                <tr>
+                    <th>Credit Card</th>
+                    <td>{{credit_card}}</td>
+                </tr>
+                <tr>
+                    <th>Mobile Payment</th>
+                    <td>{{mobile_payment}}</td>
+                    <tr>
+                    <td colspan="2">
+                        <table colspan="2">
+
+                    {% if mobilepaymenttype_dict %}
+                    {% for payment_type, payment_amount in mobilepaymenttype_dict.items %}
+                    <tr colspan="2">
+                        <th colspan="1">{{ payment_type }}</th>
+                        <td colspan="1">{{ payment_amount }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% endif %}
+                </table>
+                </td>
+
+                    </tr>
+                </tr>
+
+                <tr>
+                    <th>Credit</th>
+                    <td>{{credit}}</td>
+                </tr>
+
+                <tr>
+                    <th>Complimentary</th>
+                    <td>{{complimentary}}</td>
+                </tr>
+                <tr>
+                    <th>Total Discount</th>
+                    <td>{{total_discounts}}</td>
+                </tr>
+                <tr>
+                    <th>No of Guests</th>
+                    <td>{{no_of_guest}}</td>
+                </tr>
+                <tr>
+                    <th>Start Bill</th>
+                    <td>{{start_bill}}</td>
+                </tr>
+                <tr>
+                    <th>End Bill</th>
+                    <td>{{end_bill}}</td>
+                </tr>
+                <tr>
+                    <th>Total Void Count</th>
+                    <td>{{total_void_count}}</td>
+                </tr>
+                <tr>
+                    <th>Employee Name</th>
+                    <td>{{employee_name}}</td>
+                </tr>
+
+            </tbody>
+        </table>
+            <h4>Credit Details</h4>
+            <table>
+            <tr><td>Billno</td>
+            <td>Party</td>
+            <td>Amount</td></tr>
+             <!--Inside your table body -->
+            {% for customer_name, data in grouped_bills.items %}
+                <tr>
+                    <td colspan="3"><strong>{{ customer_name }}</strong></td>
+                </tr>
+                
+                {% for bill_data in data.bills_data %}
+                    <tr>
+                        <td>{{ bill_data.invoice_number }}</td>
+                        <td>{{ bill_data.customer_name }}</td>
+                        <td>{{ bill_data.grand_total }}</td>
+                    </tr>
+                {% endfor %}
+                
+                <tr>
+                    <td colspan="2"><strong>Total</strong></td>
+                    <td>{{ data.total_amount }}</td>
+                </tr>
+            {% endfor %}
+            
+        </table>
+    </body>
+
+    </html>

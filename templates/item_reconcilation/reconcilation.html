@@ -1,0 +1,279 @@
+{%extends 'base.html'%} {%load static%} {%block title%} Create {%endblock%}
+{%block content %}
+
+<style>
+    input[type=a] {
+        pointer-events: none;
+        width: 60%;
+        border: none;
+        background-color: inherit;
+    }
+    .branch-select-form {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #uploadDiv {
+            display: none;
+            margin-top: 10px;
+        }
+        .message {
+            margin-top: 20px;
+            font-weight: bold;
+            color: #d9534f; /* Bootstrap's danger color */
+        }
+        .upload-header {
+            font-size: 1.5rem; /* Larger font size */
+            font-weight: bold; /* Bold text */
+            color: #4d98e9; /* Bootstrap's primary color */
+            margin-bottom: 20px; /* Spacing below the label */
+        }
+</style>
+
+
+<div class="card p-2">
+
+    {% for message in messages %}
+    <div class="alert alert-danger" role="alert">
+        {{message}}
+    </div>
+    {% endfor %}
+
+{% comment %}
+    {% if show_opening %}
+     <div class="card-header d-flex justify-content-end">
+        <form action="{% url 'branchstock_upload' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="file" required>
+            <input type="submit" value="Upload Opening Count" class="btn btn-primary">
+        </form>
+    </div>  
+   {% else %}
+{% endcomment %}
+
+<div class="container">
+    <form>
+        <div class="form-group">
+            <h5 class="upload-header">Upload Opening Count</h5>
+            <select id="branchSelect" name="branch" class="form-control" onchange="handleBranchChange()">
+                <option value="" disabled selected>-- Select Branch --</option>
+                {% for item in branch_status_list %}
+                    <option value="{{ item.branch.id }}" data-has-stock-entries="{{ item.has_stock_entries|yesno:'true,false' }}">
+                        {{ item.branch.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+{%comment%}
+
+
+    <div id="messageDiv"></div>
+    {%endcomment%}
+
+    <div id="uploadDiv" style="display: none;">
+        <div class="card-header d-flex justify-content-end">
+            <form action="{% url 'branchstock_upload' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="file" name="file" required>
+                <input type="submit" value="Upload Opening Count" class="btn btn-primary">
+            </form>
+        </div>
+    </div>
+
+    <div id="messageDiv" class="message"></div>
+
+
+</div>
+
+
+    <div class="card-body p-4 m-4">
+
+        <div class="row">
+            <div class="col-md-9">
+                <div class="accordion mb-5" id="accordionExample">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                Select Branch And Date
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+                            data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                <div>
+                                    <h3>Select Branch</h3>
+                                    <form action="." method="GET">
+                                        <div class="row">
+                                            <div class="form-group col-md-4">
+                                                <select name="branch" id="branch-select" class="form-control">
+                                                    {% for branch in branches %}
+                                                    <option value="{{branch.branch_code}}">{{branch.name}}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="date" name="date" class="form-control"
+                                                    value="{{request.GET.date}}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="submit" value="Filter" class="btn btn-primary">
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3" style="border-left: 2px solid black;">
+                <div class="accordion" id="accordionExample">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                Update Date for reconcilation
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
+                            data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                <form action="{% url 'update_date_reconcilation' %}" method="POST">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label>From Date</label>
+                                        <input type="date" name="from_date" class="form-control" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>TO Date</label>
+                                        <input type="date" name="to_date" class="form-control" required>
+                                    </div>
+                                    <br>
+                                    <input type="submit" value="Update" class="btn btn-success btn-sm">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            {% if message %}
+            <h2>{{message}}</h2>
+
+            {% else %}
+            <div class="mt-4 text-center">
+                {% if request.GET.branch %}
+                <h4>{{request.GET.branch}}</h4>
+                {% endif %}
+            </div>
+            <form method="POST" action="{% url 'reconcile' %}" id="branch-form">
+                {% csrf_token %}
+                <input type="hidden" name="branch" value="{{request.GET.branch}}">
+                <input type="hidden" name="filter_date" value="{{request.GET.date}}">
+
+
+                <div class="mt-5">
+                    <table class="table table-hover table-striped table-bordered">
+                        <thead>
+                            <tr class="fw-bolder">
+                                <th>Item Name</th>
+                                <th>Opening</th>
+                                <th>Received</th>
+                                <th>Wastage</th>
+                                <th>Returned</th>
+                                <th>Sold</th>
+                                <th>Closing</th>
+                                <th>Physical</th>
+                                <th>Discrepancy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr>
+                                {% if product.title %}
+                                <td class="fw-bolder">{{product.title}}</td>
+                                {% else %}
+                                <td class="fw-bolder">{{product.product.title}}</td>
+                                {% endif %}
+                                <td>
+                                    <input type="a" name="{{product.id}}" value="{{product.opening}}">
+                                </td>
+                                <td>
+                                    <input type="a" name="{{product.id}}" value="{{product.received}}">
+                                </td>
+                                <td>
+                                    <input type="a" name="{{product.id}}" value="{{product.wastage}}">
+                                </td>
+                                <td>
+                                    <input type="a" name="{{product.id}}" value="{{product.returned}}">
+                                </td>
+                                <td>
+                                    <input type="a" name="{{product.id}}" value="{{product.sold}}">
+                                </td>
+                                <td>
+                                    <input type="a" type="a" name="{{product.id}}" value="{{product.closing}}">
+                                </td>
+                                <td>
+                                    <input type="a" name="{{product.id}}" value="{{product.physical}}">
+                                </td>
+                                <td>
+                                    <input type="a" name="{{product.id}}" value="{{product.discrepancy}}">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+                </div>
+                <div class="row col-md-2">
+                    {% if should_save %}
+                    <input type="submit" value="SAVE" class="btn btn-primary">
+                    {% endif %}
+                </div>
+            </form>
+
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+        function handleBranchChange() {
+            var select = document.getElementById("branchSelect");
+            var selectedBranchId = select.value;
+            var uploadDiv = document.getElementById("uploadDiv");
+            var messageDiv = document.getElementById("messageDiv");
+
+            // Clear previous message
+            messageDiv.innerHTML = "";
+
+            if (selectedBranchId) {
+                var hasStockEntriesString = select.options[select.selectedIndex].dataset.hasStockEntries;
+                console.log(hasStockEntries)
+
+                var hasStockEntries = (hasStockEntriesString.toLowerCase() === 'true');
+
+                console.log("hasStockEntries:", hasStockEntries); // For debugging
+                if (!hasStockEntries) {
+                    uploadDiv.style.display = 'block';
+                } else {
+                    uploadDiv.style.display = 'none';
+                    messageDiv.innerHTML = "This branch already has opening count.";
+                }
+            } else {
+                uploadDiv.style.display = 'none';
+                messageDiv.innerHTML = "";
+            }
+        }
+</script>
+
+{% endblock %}

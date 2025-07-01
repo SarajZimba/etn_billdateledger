@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title_bar %}
+{% include 'components/title_bar.html' with title=object.title pk=object.pk  %}
+{% endblock title_bar %}
+{% block content %}
+
+<div class="post d-flex flex-column-fluid" id="kt_post">
+                    <!--begin::Container-->
+                    <div id="kt_content_container" class="container-xxl">
+                        <!--begin::Card-->
+                        <div class="card">
+                            <!--begin::Card body-->
+                            <div class="card-body">
+                                <!--begin::Heading-->
+                                <div class="card-px text-center pt-15 pb-15">
+                                    <!--begin::Title-->
+                                    <h2 class="fs-2x fw-bolder mb-0">{{object.title}}</h2>
+                                    <!--end::Title-->
+                                    <!--begin::Description-->
+                                    <p class="text-gray-400 fs-4 fw-bold py-7">{{object.subtitle}}
+                               </p>
+                                    <!--end::Description-->
+                                    <!--begin::Action-->
+                                    <a href="{{object.lunch_url}}" target="_blank" class="btn btn-primary er fs-6 px-8 py-4" >{{object.button_title}}</a>
+                                    <!--end::Action-->
+                                </div>
+                                <!--end::Heading-->
+                                <!--begin::Illustration-->
+                                {%if object.image%}
+                                <div class="text-center pb-15 px-5">
+                                    <img src="{{object.image.url}}" alt="" class="mw-100 h-200px h-sm-325px" />
+                                </div>
+                                {%endif%}
+                                <p class="text-gray-400 fs-4 fw-bold py-7">{{object.description}}
+                                 </p>
+                                {%if object.merchant%} <span class="badge badge-warning"> Merchant: {{object.merchant.display_name}} </span>
+                                {%endif%}
+
+                                {%if object.category%}
+                                <span class="badge badge-success">Product Category: {{object.category.title}} </span>
+                                {%endif%}
+
+                                <!--end::Illustration-->
+                            </div>
+                            <!--end::Card body-->
+                        </div>
+                        <!--end::Card-->
+                    </div>
+                    <!--end::Container-->
+                </div>
+
+
+{% endblock content %}

@@ -189,3 +189,68 @@ class BillCheckSumView(APIView):
                 except Exception as e:
                     pass
         return Response({'details': 'ok', 'created_invoices':new_invoice_list})
+    
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from datetime import datetime, time
+from accounting.models import TblJournalEntry, TblDrJournalEntry, TblCrJournalEntry
+from bill.models import Bill  # Replace 'yourapp' with your actual app name
+from django.db import transaction
+
+class FixJournalEntryEntryDateForBills(APIView):
+    @transaction.atomic
+    def get(self, request, *args, **kwargs):
+        bills = Bill.objects.all().order_by('id')
+        updated = 0
+
+        for bill in bills:
+            bill_date = bill.created_at.date()
+            bill_amount = bill.grand_total
+
+            start_datetime = datetime.combine(bill_date, time.min)
+            end_datetime = datetime.combine(bill_date, time.max)
+
+            journal_entry = TblJournalEntry.objects.filter(
+                created_at__range=(start_datetime, end_datetime),
+                entry_date__isnull=True,
+                journal_total=bill_amount,
+                employee_name = "Created Automatically during Sale"
+            ).order_by('id').first()
+
+            if journal_entry:
+                journal_entry.entry_date = bill.transaction_date
+                journal_entry.save()
+                updated += 1
+
+        return Response({"status": "completed", "updated_entries": updated})
+    
+from purchase.models import Purchase
+class Pur(APIView):
+    @transaction.atomic()
+    def get(self, request, *args, **kwargs):
+        # Get all purchases without a linked journal
+        purchases = Purchase.objects.all().order_by('id')
+        updated_entries = 0
+
+        for purchase in purchases:
+            # Use created_at date instead of bill_date
+            purchase_created_date = purchase.created_at.date()
+            purchase_total = purchase.grand_total
+            print(purchase_created_date)
+
+            start_date = datetime.combine(purchase_created_date, datetime.min.time())
+            end_date = datetime.combine(purchase_created_date, datetime.max.time())
+
+            journal_entry = TblJournalEntry.objects.filter(
+                created_at__range=(start_date, end_date),
+                journal_total=purchase_total
+            ).order_by('id').first()
+
+            entry_date = purchase.bill_date
+            if journal_entry:
+                journal_entry.entry_date = entry_date
+                journal_entry.save()
+
+        return Response({"status": "completed", "updated_entries": updated_entries})
+
+            

@@ -77,6 +77,7 @@ class BillForm(BaseForm, forms.ModelForm):
             # "invoice_number",
             "amount_in_words",
             "payment_mode",
+            "narration",
             # "organization",
             # "branch",
         ]

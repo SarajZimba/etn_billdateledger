@@ -46,6 +46,7 @@ class TblJournalEntry(AccountBaseModel):
     employee_name = models.CharField(max_length=100, null=True, blank=True)
     journal_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     fiscal_year = models.CharField(max_length=10)
+    entry_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return 'Journal Entry'
@@ -59,6 +60,7 @@ class CumulativeLedger(AccountBaseModel):
     credit_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     ledger = models.ForeignKey(AccountLedger, models.CASCADE, null=True, blank=True)
     journal = models.ForeignKey(TblJournalEntry, models.CASCADE, null=True, blank=True)
+    entry_date = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.ledger_name

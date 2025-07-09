@@ -262,6 +262,7 @@ from rest_framework.response import Response
 from accounting.models import AccountSubLedgerTracking
 from bill.utils import update_cumulative_ledger_expense
 
+from accounting.utils import change_date_to_datetime
 
 import decimal
 class ExpenseCreate(View):
@@ -282,7 +283,12 @@ class ExpenseCreate(View):
         credit_sub_ledger_id = request.POST.get('credit_sub_ledger')
         amount = int(request.POST.get('amount'))
         description = request.POST.get('description')
+        # entry_date = request.POST.get('entry_date')
 
+        # If your entry_date is in YYYY-MM-DD format (common for HTML date inputs)
+        entry_date = datetime.now().strftime('%Y-%m-%d')
+
+        entry_datetime_for_cumulativeledger = change_date_to_datetime(entry_date)
         if ledger_id != '':
             ledger = AccountLedger.objects.get(id=ledger_id)
         else:
@@ -302,7 +308,7 @@ class ExpenseCreate(View):
         else:
             credit_sub_ledger = None
 
-        journal = TblJournalEntry.objects.create(employee_name="From expense form", journal_total=amount)
+        journal = TblJournalEntry.objects.create(employee_name="From expense form", journal_total=amount, entry_date=entry_date)
         TblDrJournalEntry.objects.create(ledger=ledger, debit_amount=amount, particulars=f"Automatic: {ledger.ledger_name} a/c Dr", journal_entry=journal, sub_ledger=sub_ledger, paidfrom_ledger = credit_ledger)
         TblCrJournalEntry.objects.create(ledger=credit_ledger, credit_amount=amount, particulars=f"Automatic: To {credit_ledger.ledger_name}", journal_entry=journal, sub_ledger=credit_sub_ledger,paidfrom_ledger = credit_ledger)
         instance = Expense.objects.create(
@@ -318,14 +324,17 @@ class ExpenseCreate(View):
 
         instance.ledger.total_value += instance.amount
         instance.ledger.save()
-        update_cumulative_ledger_expense(instance.ledger, journal)
+        # update_cumulative_ledger_expense(instance.ledger, journal)
+        update_cumulative_ledger_expense(instance.ledger, journal, entry_datetime_for_cumulativeledger)
+
         # if instance.sub_ledger:
         #     instance.sub_ledger.total_value += instance.amount
         #     instance.sub_ledger.save()
 
         instance.credit_ledger.total_value -= instance.amount
         instance.credit_ledger.save()
-        update_cumulative_ledger_expense(instance.credit_ledger, journal=journal)
+        # update_cumulative_ledger_expense(instance.credit_ledger, journal=journal)
+        update_cumulative_ledger_expense(instance.credit_ledger, journal, entry_datetime_for_cumulativeledger)
 
         expense_subledger = instance.sub_ledger
             # sub = AccountSubLedger.objects.get(sub_ledger_name=subledgername, ledger=debit_account)
@@ -1659,7 +1668,9 @@ class PartyLedgerView(View):
         }
 
         return render(request, self.template_name, context)
-    
+from bill.utils import update_cumulative_ledger_partyledger 
+from django.db import transaction
+
 class PartyLedgerJournalView(CreateView):
     template_name = 'accounting/partyledgerjournal.html'
 
@@ -1679,7 +1690,7 @@ class PartyLedgerJournalView(CreateView):
         }
 
         return render(request, self.template_name, context)
-    
+    @transaction.atomic()     
     def post(self, request, ledger_id):
 
         debit_ledger1 = request.POST.get('debit_ledger')
@@ -1691,8 +1702,9 @@ class PartyLedgerJournalView(CreateView):
         particular = request.POST.get('particular')
         # journal_entry = TblJournalEntry.objects.create(employee_name=request.user.username, journal_total=amount)
         # print(journal_entry)
-
-        journal_entry = TblJournalEntry.objects.create(employee_name=request.user.username, journal_total=amount)
+        entry_date = datetime.now()
+        fiscal_year = Organization.objects.first().get_fiscal_year()
+        journal_entry = TblJournalEntry.objects.create(employee_name=request.user.username, journal_total=amount, entry_date=entry_date.date(), fiscal_year=fiscal_year)
        
         debit_ledger_id = ledger_id
         debit_ledger = AccountLedger.objects.get(pk=debit_ledger_id)
@@ -1701,20 +1713,22 @@ class PartyLedgerJournalView(CreateView):
         debit_particular = particular
         debit_amount = Decimal(amount)
         debit_ledger_type = debit_ledger.account_chart.account_type
-   
+
 
         TblDrJournalEntry.objects.create(ledger=debit_ledger, journal_entry=journal_entry, particulars=debit_particular, debit_amount=debit_amount, paidfrom_ledger=selected_ledger)
         if debit_ledger_type in ['Asset', 'Expense']:
             debit_ledger.total_value =debit_ledger.total_value + debit_amount
             debit_ledger.save()
-            update_cumulative_ledger_bill(debit_ledger)
+            # update_cumulative_ledger_bill(debit_ledger)
+            update_cumulative_ledger_partyledger(debit_ledger, entry_date, journal_entry)
                 
 
         elif debit_ledger_type in ['Liability', 'Revenue', 'Equity']:
             debit_ledger.total_value = debit_ledger.total_value - debit_amount
             debit_ledger.save()
-            update_cumulative_ledger_bill(debit_ledger)
-        
+            # update_cumulative_ledger_bill(debit_ledger)
+            update_cumulative_ledger_partyledger(debit_ledger, entry_date, journal_entry)
+
         credit_ledger_id = debit_ledger1
         # print(credit_ledger_id)
         # credit_ledger1 = AccountLedger.objects.get(pk=debit_ledger)
@@ -1728,12 +1742,16 @@ class PartyLedgerJournalView(CreateView):
         if credit_ledger_type in ['Asset', 'Expense']:
             credit_ledger.total_value = credit_ledger.total_value - credit_amount
             credit_ledger.save()
-            update_cumulative_ledger_bill(credit_ledger)
+            # update_cumulative_ledger_bill(credit_ledger)
+            update_cumulative_ledger_partyledger(credit_ledger, entry_date, journal_entry)
+
          
         elif credit_ledger_type in ['Liability', 'Revenue', 'Equity']:
             credit_ledger.total_value = credit_ledger.total_value + credit_amount
             credit_ledger.save()
-            update_cumulative_ledger_bill(credit_ledger)
+            # update_cumulative_ledger_bill(credit_ledger)
+            update_cumulative_ledger_partyledger(credit_ledger, entry_date, journal_entry)
+
         current_page_url = reverse('ledger_detail', args=[ledger_id]) + f'?debit_ledger1={debit_ledger1}'
         
     
@@ -1759,7 +1777,7 @@ class PartyLedgerJournal1View(CreateView):
         }
 
         return render(request, self.template_name, context)
-    
+    @transaction.atomic()     
     def post(self, request, ledger_id):
         
 
@@ -1767,13 +1785,14 @@ class PartyLedgerJournal1View(CreateView):
         selected_ledger = AccountLedger.objects.get(id=debit_ledger1)
         # print(selected_ledger)
 
-        
+        fiscal_year = Organization.objects.first().get_fiscal_year()
         amount = request.POST.get('amount')
         particular = request.POST.get('particular')
         # journal_entry = TblJournalEntry.objects.create(employee_name=request.user.username, journal_total=amount)
         # print(journal_entry)
+        entry_date = datetime.now()
 
-        journal_entry = TblJournalEntry.objects.create(employee_name=request.user.username, journal_total=amount)
+        journal_entry = TblJournalEntry.objects.create(employee_name=request.user.username, journal_total=amount, entry_date=entry_date.date(), fiscal_year=fiscal_year)
        
         # debit_ledger_id = ledger_id
         debit_ledger = AccountLedger.objects.get(pk=debit_ledger1)
@@ -1788,13 +1807,15 @@ class PartyLedgerJournal1View(CreateView):
         if debit_ledger_type in ['Asset', 'Expense']:
             debit_ledger.total_value =debit_ledger.total_value + debit_amount
             debit_ledger.save()
-            update_cumulative_ledger_bill(debit_ledger) 
+            # update_cumulative_ledger_bill(debit_ledger) 
+            update_cumulative_ledger_partyledger(debit_ledger, entry_date, journal_entry)
 
         elif debit_ledger_type in ['Liability', 'Revenue', 'Equity']:
             debit_ledger.total_value = debit_ledger.total_value - debit_amount
             debit_ledger.save()
-            update_cumulative_ledger_bill(debit_ledger)    
-        
+            # update_cumulative_ledger_bill(debit_ledger)    
+            update_cumulative_ledger_partyledger(debit_ledger, entry_date, journal_entry)
+
         credit_ledger_id = ledger_id
         # print(credit_ledger_id)
         # credit_ledger1 = AccountLedger.objects.get(pk=debit_ledger)
@@ -1808,11 +1829,15 @@ class PartyLedgerJournal1View(CreateView):
         if credit_ledger_type in ['Asset', 'Expense']:
             credit_ledger.total_value = credit_ledger.total_value - credit_amount
             credit_ledger.save()
-            update_cumulative_ledger_bill(credit_ledger)
+            # update_cumulative_ledger_bill(credit_ledger)
+            update_cumulative_ledger_partyledger(credit_ledger, entry_date, journal_entry)
+
         elif credit_ledger_type in ['Liability', 'Revenue', 'Equity']:
             credit_ledger.total_value = credit_ledger.total_value + credit_amount
             credit_ledger.save()
-            update_cumulative_ledger_bill(credit_ledger)
+            # update_cumulative_ledger_bill(credit_ledger)
+            update_cumulative_ledger_partyledger(credit_ledger, entry_date, journal_entry)
+
         current_page_url = reverse('ledger_detail', args=[ledger_id]) + f'?debit_ledger1={debit_ledger1}'
         return redirect(current_page_url)
     
@@ -1823,214 +1848,403 @@ from django.utils import timezone  as django_timezone
 from pytz import timezone as pytz_timezone
 
 
+# class LedgerDetailView(View):
+#     template_name = 'accounting/ledger_detail.html'  # Replace with your actual template path
+
+#     def get(self, request, ledger_id):
+#         kathmandu_timezone = pytz_timezone('Asia/Kathmandu')
+#         ledger = get_object_or_404(AccountLedger, id=ledger_id)
+#         current_date = datetime.today().date()
+#         tomorrow_date = current_date + timedelta(days=1) 
+#         # credit_entries = TblCrJournalEntry.objects.filter(ledger=ledger, created_at__range=[current_date, tomorrow_date])
+#         credit_entries = TblCrJournalEntry.objects.filter(ledger=ledger, journal_entry__entry_date__range=[current_date, tomorrow_date])
+#         total_credit = 0
+#         total_debit = 0
+#         debit_entries = TblDrJournalEntry.objects.filter(ledger=ledger, journal_entry__entry_date__range=[current_date, tomorrow_date])
+#         from_date = request.GET.get('fromDate')
+#         to_date = request.GET.get('toDate')
+#         print(to_date)
+        
+#         option = request.GET.get('option')
+#         current_fiscal_year = Organization.objects.last().current_fiscal_year
+#         if from_date and to_date:
+#             to_date_str = request.GET.get('toDate')
+            
+#             to_date = datetime.strptime(to_date_str, '%Y-%m-%d')
+#             to_date += timedelta(days=1)
+#             credit_entries = TblCrJournalEntry.objects.filter(ledger=ledger)
+#             debit_entries = TblDrJournalEntry.objects.filter(ledger=ledger)
+#             credit_entries = credit_entries.filter(journal_entry__entry_date__range=[from_date, to_date])
+#             debit_entries = debit_entries.filter(journal_entry__entry_date__range=[from_date, to_date])
+#         unique_journal_ids = debit_entries.values_list('journal_entry_id', flat=True).distinct()
+#         unique_journal_ids1 = credit_entries.values_list('journal_entry_id', flat=True).distinct()
+      
+       
+#         details = []
+#         for journal_id1 in unique_journal_ids1:
+           
+#             debit_entries_testing = TblDrJournalEntry.objects.filter(journal_entry_id=journal_id1)
+            
+                
+#             ledger_names = [debit_entry.ledger.ledger_name for debit_entry in debit_entries_testing]
+#             ledger_amount = [debit_entry.debit_amount for debit_entry in debit_entries_testing]
+         
+
+#             debit_entries_test3 = TblCrJournalEntry.objects.filter(Q(journal_entry_id=journal_id1) & Q(ledger_id=ledger_id))
+#             date = [debit_entry.created_at.astimezone(kathmandu_timezone).strftime("%Y-%m-%d %H:%M:%S") for debit_entry in debit_entries_test3]
+#             credit  = [debit_entry.credit_amount for debit_entry in debit_entries_test3]
+#             # print(credit)
+#             particulars  = [debit_entry.particulars for debit_entry in debit_entries_test3]
+           
+#             payers_info = ', '.join([f'{name} ({amount})' for name, amount in zip(ledger_names, ledger_amount)])
+           
+           
+#             for credit_entry in credit_entries:
+                
+             
+#                 # Create a dictionary for this ledger
+#                 debit_ledger_entry = {
+#                         'journal_id': journal_id1,
+#                         # 'payers': ', '.join(ledger_names),  # Join ledger names with a comma
+#                         'payers': payers_info,
+#                         'date': date,
+#                         'particulars': particulars,
+#                         'debit': Decimal('0'),
+#                         'credit': credit
+
+#                     }
+
+#             details.append(debit_ledger_entry)
+
+#         for journal_id1 in unique_journal_ids:
+#             debit_entries_test1 = TblCrJournalEntry.objects.filter(journal_entry_id=journal_id1)
+#             ledger_names = [debit_entry.ledger.ledger_name for debit_entry in debit_entries_test1]
+#             ledger_amount = [debit_entry.credit_amount for debit_entry in debit_entries_test1]
+#             payers_info = ', '.join([f'{name} ({amount})' for name, amount in zip(ledger_names, ledger_amount)])
+
+#             debit_entries_test2 = TblDrJournalEntry.objects.filter(Q(journal_entry_id=journal_id1) & Q(ledger_id=ledger_id))
+#             date = [debit_entry.created_at.astimezone(kathmandu_timezone).strftime("%Y-%m-%d %H:%M:%S")  for debit_entry in debit_entries_test2]
+#             debit  = [debit_entry.debit_amount for debit_entry in debit_entries_test2]
+#             particulars  = [debit_entry.particulars for debit_entry in debit_entries_test2]
+
+#             for debit_entry in debit_entries:
+             
+#                 # Create a dictionary for this ledger
+#                 debit_ledger_entry = {
+#                         'journal_id': journal_id1,
+#                         # 'payers': ', '.join(ledger_names),  # Join ledger names with a comma
+#                         'payers': payers_info,
+#                         'date': date,
+#                         'particulars': particulars,
+#                         'debit': debit,
+#                         'credit': Decimal('0')
+
+#                     }
+
+#             details.append(debit_ledger_entry)
+        
+  
+
+#         sorted_details = sorted(details, key=lambda x: x['date'])
+
+
+
+
+#         # Check the count of credit entries
+#         credit_entry_count = credit_entries.count()
+
+#         # Check the count of debit entries
+#         debit_entry_count = debit_entries.count()
+
+#         # Initialize variables as None
+#         first_date = None
+#         last_date = None
+
+
+#         if credit_entry_count > 0 or debit_entry_count > 0:
+#             credit_date_range = credit_entries.aggregate(
+#                 first_credit_date=Min('created_at'),
+#                 last_credit_date=Max('created_at')
+#             )
+
+#             # Calculate the first and last dates for debit entries
+#             debit_date_range = debit_entries.aggregate(
+#                 first_debit_date=Min('created_at'),
+#                 last_debit_date=Max('created_at')
+#             )
+
+#             first_credit_date = credit_date_range['first_credit_date'] or django_timezone.datetime.max.replace(tzinfo=django_timezone.utc)
+#             last_credit_date = credit_date_range['last_credit_date'] or django_timezone.datetime.min.replace(tzinfo=django_timezone.utc)
+#             first_debit_date = debit_date_range['first_debit_date'] or django_timezone.datetime.max.replace(tzinfo=django_timezone.utc)
+#             last_debit_date = debit_date_range['last_debit_date'] or django_timezone.datetime.min.replace(tzinfo=django_timezone.utc)
+
+#             # Determine the overall date range
+#             first_date = min(first_credit_date, first_debit_date) 
+#             last_date = max(last_credit_date, last_debit_date) 
+
+#         print('first_date_from_loop', first_date)
+#         if from_date and to_date:
+#             credit_entries = credit_entries.filter(created_at__range=[from_date, to_date])
+#             debit_entries = debit_entries.filter(created_at__range=[from_date, to_date])
+
+#         for credit in credit_entries:
+#             total_credit += credit.credit_amount
+
+#         all_entries = sorted(
+#             chain(credit_entries, debit_entries),
+#             key=attrgetter('created_at')
+#         )
+
+#         for debit in debit_entries:
+#             total_debit += debit.debit_amount
+
+#         total_diff = total_debit - total_credit
+#         opening_balance_credit = 0
+#         opening_balance_debit = 0
+#         closing_balance = 0
+
+#         yesterday = current_date - timedelta(days=1)
+
+#         earliest_credit_date = TblCrJournalEntry.objects.aggregate(earliest_credit_date=Min('created_at'))['earliest_credit_date']
+#         earliest_debit_date = TblDrJournalEntry.objects.aggregate(earliest_debit_date=Min('created_at'))['earliest_debit_date']
+
+# # Determine the overall first date
+#         first_date1 = min(earliest_credit_date, earliest_debit_date)
+
+#         print('first_date_from_method', first_date1)
+
+#         # Filter credit entries from 'first_date' to 'yesterday'
+#         opening_credit_entries = TblCrJournalEntry.objects.filter(ledger=ledger, created_at__range=[first_date1, current_date])
+
+#         # Aggregate the sum of credit amounts
+#         opening_balance_credit = opening_credit_entries.aggregate(total_credit=Sum('credit_amount'))['total_credit'] or 0
+
+#         opening_debit_entries = TblDrJournalEntry.objects.filter(ledger=ledger, created_at__range=[first_date1, current_date])
+
+#         # Aggregate the sum of credit amounts
+#         opening_balance_debit = opening_debit_entries.aggregate(total_debit=Sum('debit_amount'))['total_debit'] or 0
+
+        
+#         if option == 'openclose':
+#             total_diff1 = total_debit - total_credit
+#             if total_diff1 < 0:
+#                 opening_balance_credit = abs(total_diff1)
+#             else:
+#                 closing_balance = total_diff1
+
+#         neg = 0
+#         if total_diff < 0:
+#             neg = 1
+#         elif total_diff == 0:
+#             neg = 2
+#         closing_balance = abs(total_diff)
+
+#         # Calculate the opening balance before filtering
+#         if from_date:
+#             to_date_str = request.GET.get('toDate')        
+#             to_date = datetime.strptime(to_date_str, '%Y-%m-%d')
+#             to_date += timedelta(days=1)
+#             opening_balance_credit = 0
+#             opening_balance_debit = 0
+#             opening_entries_credit = TblCrJournalEntry.objects.filter(ledger=ledger, created_at__lt=from_date)
+#             opening_entries_debit = TblDrJournalEntry.objects.filter(ledger=ledger, created_at__lt=from_date)
+            
+#             for entry in opening_entries_credit:
+#                 opening_balance_credit += entry.credit_amount
+#             for entry in opening_entries_debit:
+#                 opening_balance_debit += entry.debit_amount
+#             to_date -= timedelta(days=1)
+
+#             to_date = to_date.strftime('%Y-%m-%d')
+
+#         context = {
+#             'ledger': ledger,
+#             'entries': all_entries,
+#             'credit_entries': credit_entries,
+#             'debit_entries': debit_entries,
+#             'total_debit': total_debit,
+#             'total_credit': total_credit,
+#             'closing_balance': closing_balance,
+#             'opening_balance': {'credit': opening_balance_credit, 'debit': opening_balance_debit},
+#             'from_date': from_date,
+#             'to_date': to_date,
+#             'openclose': option == 'openclose',
+#             'neg': neg,
+#             'current_fiscal_year':current_fiscal_year,
+#             'first_credit_date': first_date,
+#             'last_credit_date': last_date,
+#             'sorted_details':sorted_details
+    
+#         }
+#         return render(request, self.template_name, context)
+    
+from datetime import datetime, timedelta
+from decimal import Decimal
+from itertools import chain
+
+from django.db.models import Sum
+from django.shortcuts import get_object_or_404, render
+from django.utils.timezone import now
+from django.views import View
+from pytz import timezone as pytz_timezone
+
+# from .models import (
+#     AccountLedger,
+#     TblCrJournalEntry,
+#     TblDrJournalEntry,
+#     Organization
+# )
+
+
 class LedgerDetailView(View):
-    template_name = 'accounting/ledger_detail.html'  # Replace with your actual template path
+    template_name = 'accounting/ledger_detail.html'
 
     def get(self, request, ledger_id):
         kathmandu_timezone = pytz_timezone('Asia/Kathmandu')
         ledger = get_object_or_404(AccountLedger, id=ledger_id)
         current_date = datetime.today().date()
-        tomorrow_date = current_date + timedelta(days=1) 
-        credit_entries = TblCrJournalEntry.objects.filter(ledger=ledger, created_at__range=[current_date, tomorrow_date])
-        # credit_entries = TblCrJournalEntry.objects.filter(ledger=ledger)
+        tomorrow_date = current_date + timedelta(days=1)
+
+        credit_entries = TblCrJournalEntry.objects.filter(
+            ledger=ledger,
+            journal_entry__entry_date__range=[current_date, tomorrow_date]
+        )
+        debit_entries = TblDrJournalEntry.objects.filter(
+            ledger=ledger,
+            journal_entry__entry_date__range=[current_date, tomorrow_date]
+        )
+
         total_credit = 0
         total_debit = 0
-        debit_entries = TblDrJournalEntry.objects.filter(ledger=ledger, created_at__range=[current_date, tomorrow_date])
-        # debit_entries = TblDrJournalEntry.objects.filter(ledger=ledger)
+
         from_date = request.GET.get('fromDate')
         to_date = request.GET.get('toDate')
-        print(to_date)
-        
         option = request.GET.get('option')
         current_fiscal_year = Organization.objects.last().current_fiscal_year
+
         if from_date and to_date:
-            to_date_str = request.GET.get('toDate')
-            
-            to_date = datetime.strptime(to_date_str, '%Y-%m-%d')
-            to_date += timedelta(days=1)
-            credit_entries = TblCrJournalEntry.objects.filter(ledger=ledger)
-            debit_entries = TblDrJournalEntry.objects.filter(ledger=ledger)
-            credit_entries = credit_entries.filter(created_at__range=[from_date, to_date])
-            debit_entries = debit_entries.filter(created_at__range=[from_date, to_date])
-        unique_journal_ids = debit_entries.values_list('journal_entry_id', flat=True).distinct()
-        unique_journal_ids1 = credit_entries.values_list('journal_entry_id', flat=True).distinct()
-      
-       
+            to_date_obj = datetime.strptime(to_date, '%Y-%m-%d') + timedelta(days=1)
+            credit_entries = TblCrJournalEntry.objects.filter(
+                ledger=ledger,
+                journal_entry__entry_date__range=[from_date, to_date_obj]
+            )
+            debit_entries = TblDrJournalEntry.objects.filter(
+                ledger=ledger,
+                journal_entry__entry_date__range=[from_date, to_date_obj]
+            )
+
+        unique_journal_ids_cr = credit_entries.values_list('journal_entry_id', flat=True).distinct()
+        unique_journal_ids_dr = debit_entries.values_list('journal_entry_id', flat=True).distinct()
+
         details = []
-        for journal_id1 in unique_journal_ids1:
-           
-            debit_entries_testing = TblDrJournalEntry.objects.filter(journal_entry_id=journal_id1)
-            
-                
-            ledger_names = [debit_entry.ledger.ledger_name for debit_entry in debit_entries_testing]
-            ledger_amount = [debit_entry.debit_amount for debit_entry in debit_entries_testing]
-         
 
-            debit_entries_test3 = TblCrJournalEntry.objects.filter(Q(journal_entry_id=journal_id1) & Q(ledger_id=ledger_id))
-            date = [debit_entry.created_at.astimezone(kathmandu_timezone).strftime("%Y-%m-%d %H:%M:%S") for debit_entry in debit_entries_test3]
-            credit  = [debit_entry.credit_amount for debit_entry in debit_entries_test3]
-            # print(credit)
-            particulars  = [debit_entry.particulars for debit_entry in debit_entries_test3]
-           
-            payers_info = ', '.join([f'{name} ({amount})' for name, amount in zip(ledger_names, ledger_amount)])
-           
-           
-            for credit_entry in credit_entries:
-                
-             
-                # Create a dictionary for this ledger
-                debit_ledger_entry = {
-                        'journal_id': journal_id1,
-                        # 'payers': ', '.join(ledger_names),  # Join ledger names with a comma
-                        'payers': payers_info,
-                        'date': date,
-                        'particulars': particulars,
-                        'debit': Decimal('0'),
-                        'credit': credit
+        for journal_id in unique_journal_ids_cr:
+            dr_entries = TblDrJournalEntry.objects.filter(journal_entry_id=journal_id)
+            cr_entries = TblCrJournalEntry.objects.filter(journal_entry_id=journal_id, ledger_id=ledger.id)
 
-                    }
+            ledger_names = [entry.ledger.ledger_name for entry in dr_entries]
+            ledger_amounts = [entry.debit_amount for entry in dr_entries]
+            payers_info = ', '.join([f'{name} ({amount})' for name, amount in zip(ledger_names, ledger_amounts)])
 
-            details.append(debit_ledger_entry)
+            for entry in cr_entries:
+                details.append({
+                    'journal_id': journal_id,
+                    'payers': payers_info,
+                    'date': [entry.journal_entry.entry_date.strftime('%Y-%m-%d')],
+                    'particulars': [entry.particulars],
+                    'debit': Decimal('0'),
+                    'credit': [entry.credit_amount]
+                })
 
-        for journal_id1 in unique_journal_ids:
-            debit_entries_test1 = TblCrJournalEntry.objects.filter(journal_entry_id=journal_id1)
-            ledger_names = [debit_entry.ledger.ledger_name for debit_entry in debit_entries_test1]
-            ledger_amount = [debit_entry.credit_amount for debit_entry in debit_entries_test1]
-            payers_info = ', '.join([f'{name} ({amount})' for name, amount in zip(ledger_names, ledger_amount)])
+        for journal_id in unique_journal_ids_dr:
+            cr_entries = TblCrJournalEntry.objects.filter(journal_entry_id=journal_id)
+            dr_entries = TblDrJournalEntry.objects.filter(journal_entry_id=journal_id, ledger_id=ledger.id)
 
-            debit_entries_test2 = TblDrJournalEntry.objects.filter(Q(journal_entry_id=journal_id1) & Q(ledger_id=ledger_id))
-            date = [debit_entry.created_at.astimezone(kathmandu_timezone).strftime("%Y-%m-%d %H:%M:%S")  for debit_entry in debit_entries_test2]
-            debit  = [debit_entry.debit_amount for debit_entry in debit_entries_test2]
-            particulars  = [debit_entry.particulars for debit_entry in debit_entries_test2]
+            ledger_names = [entry.ledger.ledger_name for entry in cr_entries]
+            ledger_amounts = [entry.credit_amount for entry in cr_entries]
+            payers_info = ', '.join([f'{name} ({amount})' for name, amount in zip(ledger_names, ledger_amounts)])
 
-            for debit_entry in debit_entries:
-             
-                # Create a dictionary for this ledger
-                debit_ledger_entry = {
-                        'journal_id': journal_id1,
-                        # 'payers': ', '.join(ledger_names),  # Join ledger names with a comma
-                        'payers': payers_info,
-                        'date': date,
-                        'particulars': particulars,
-                        'debit': debit,
-                        'credit': Decimal('0')
-
-                    }
-
-            details.append(debit_ledger_entry)
-        
-  
+            for entry in dr_entries:
+                details.append({
+                    'journal_id': journal_id,
+                    'payers': payers_info,
+                    'date': [entry.journal_entry.entry_date.strftime('%Y-%m-%d')],
+                    'particulars': [entry.particulars],
+                    'debit': [entry.debit_amount],
+                    'credit': Decimal('0')
+                })
 
         sorted_details = sorted(details, key=lambda x: x['date'])
 
+        # ✅ Unified way to get first and last date from both credit and debit entries
+        all_dates = list(credit_entries.values_list('journal_entry__entry_date', flat=True)) + \
+                    list(debit_entries.values_list('journal_entry__entry_date', flat=True))
 
+        if all_dates:
+            first_date = min(all_dates)
+            last_date = max(all_dates)
+        else:
+            first_date = last_date = None
 
-
-        # Check the count of credit entries
-        credit_entry_count = credit_entries.count()
-
-        # Check the count of debit entries
-        debit_entry_count = debit_entries.count()
-
-        # Initialize variables as None
-        first_date = None
-        last_date = None
-
-
-        if credit_entry_count > 0 or debit_entry_count > 0:
-            credit_date_range = credit_entries.aggregate(
-                first_credit_date=Min('created_at'),
-                last_credit_date=Max('created_at')
-            )
-
-            # Calculate the first and last dates for debit entries
-            debit_date_range = debit_entries.aggregate(
-                first_debit_date=Min('created_at'),
-                last_debit_date=Max('created_at')
-            )
-
-            first_credit_date = credit_date_range['first_credit_date'] or django_timezone.datetime.max.replace(tzinfo=django_timezone.utc)
-            last_credit_date = credit_date_range['last_credit_date'] or django_timezone.datetime.min.replace(tzinfo=django_timezone.utc)
-            first_debit_date = debit_date_range['first_debit_date'] or django_timezone.datetime.max.replace(tzinfo=django_timezone.utc)
-            last_debit_date = debit_date_range['last_debit_date'] or django_timezone.datetime.min.replace(tzinfo=django_timezone.utc)
-
-            # Determine the overall date range
-            first_date = min(first_credit_date, first_debit_date) 
-            last_date = max(last_credit_date, last_debit_date) 
-
-        print('first_date_from_loop', first_date)
-        if from_date and to_date:
-            credit_entries = credit_entries.filter(created_at__range=[from_date, to_date])
-            debit_entries = debit_entries.filter(created_at__range=[from_date, to_date])
-
-        for credit in credit_entries:
-            total_credit += credit.credit_amount
+        for entry in credit_entries:
+            total_credit += entry.credit_amount
+        for entry in debit_entries:
+            total_debit += entry.debit_amount
 
         all_entries = sorted(
             chain(credit_entries, debit_entries),
-            key=attrgetter('created_at')
+            key=lambda x: x.journal_entry.entry_date
         )
 
-        for debit in debit_entries:
-            total_debit += debit.debit_amount
-
         total_diff = total_debit - total_credit
-        opening_balance_credit = 0
-        opening_balance_debit = 0
-        closing_balance = 0
+        closing_balance = abs(total_diff)
+        neg = 1 if total_diff < 0 else 2 if total_diff == 0 else 0
 
-        yesterday = current_date - timedelta(days=1)
-
-        earliest_credit_date = TblCrJournalEntry.objects.aggregate(earliest_credit_date=Min('created_at'))['earliest_credit_date']
-        earliest_debit_date = TblDrJournalEntry.objects.aggregate(earliest_debit_date=Min('created_at'))['earliest_debit_date']
-
-# Determine the overall first date
+        # Opening Balance
+        earliest_credit_date = TblCrJournalEntry.objects.aggregate(
+            earliest_credit_date=Min('journal_entry__entry_date')
+        )['earliest_credit_date'] or current_date
+        earliest_debit_date = TblDrJournalEntry.objects.aggregate(
+            earliest_debit_date=Min('journal_entry__entry_date')
+        )['earliest_debit_date'] or current_date
         first_date1 = min(earliest_credit_date, earliest_debit_date)
 
-        print('first_date_from_method', first_date1)
+        opening_credit_entries = TblCrJournalEntry.objects.filter(
+            ledger=ledger,
+            journal_entry__entry_date__range=[first_date1, current_date]
+        )
+        opening_balance_credit = opening_credit_entries.aggregate(
+            total_credit=Sum('credit_amount')
+        )['total_credit'] or 0
 
-        # Filter credit entries from 'first_date' to 'yesterday'
-        opening_credit_entries = TblCrJournalEntry.objects.filter(ledger=ledger, created_at__range=[first_date1, current_date])
+        opening_debit_entries = TblDrJournalEntry.objects.filter(
+            ledger=ledger,
+            journal_entry__entry_date__range=[first_date1, current_date]
+        )
+        opening_balance_debit = opening_debit_entries.aggregate(
+            total_debit=Sum('debit_amount')
+        )['total_debit'] or 0
 
-        # Aggregate the sum of credit amounts
-        opening_balance_credit = opening_credit_entries.aggregate(total_credit=Sum('credit_amount'))['total_credit'] or 0
-
-        opening_debit_entries = TblDrJournalEntry.objects.filter(ledger=ledger, created_at__range=[first_date1, current_date])
-
-        # Aggregate the sum of credit amounts
-        opening_balance_debit = opening_debit_entries.aggregate(total_debit=Sum('debit_amount'))['total_debit'] or 0
-
-        
         if option == 'openclose':
-            total_diff1 = total_debit - total_credit
-            if total_diff1 < 0:
-                opening_balance_credit = abs(total_diff1)
+            if total_diff < 0:
+                opening_balance_credit = abs(total_diff)
             else:
-                closing_balance = total_diff1
+                closing_balance = total_diff
 
-        neg = 0
-        if total_diff < 0:
-            neg = 1
-        elif total_diff == 0:
-            neg = 2
-        closing_balance = abs(total_diff)
-
-        # Calculate the opening balance before filtering
+        # Opening for custom date range
         if from_date:
-            to_date_str = request.GET.get('toDate')        
-            to_date = datetime.strptime(to_date_str, '%Y-%m-%d')
-            to_date += timedelta(days=1)
-            opening_balance_credit = 0
-            opening_balance_debit = 0
-            opening_entries_credit = TblCrJournalEntry.objects.filter(ledger=ledger, created_at__lt=from_date)
-            opening_entries_debit = TblDrJournalEntry.objects.filter(ledger=ledger, created_at__lt=from_date)
-            
-            for entry in opening_entries_credit:
-                opening_balance_credit += entry.credit_amount
-            for entry in opening_entries_debit:
-                opening_balance_debit += entry.debit_amount
-            to_date -= timedelta(days=1)
+            opening_balance_credit = TblCrJournalEntry.objects.filter(
+                ledger=ledger,
+                journal_entry__entry_date__lt=from_date
+            ).aggregate(total=Sum('credit_amount'))['total'] or 0
 
+            opening_balance_debit = TblDrJournalEntry.objects.filter(
+                ledger=ledger,
+                journal_entry__entry_date__lt=from_date
+            ).aggregate(total=Sum('debit_amount'))['total'] or 0
+
+            # adjust `to_date` to display in context
+            to_date = datetime.strptime(to_date, '%Y-%m-%d') - timedelta(days=0)
             to_date = to_date.strftime('%Y-%m-%d')
 
         context = {
@@ -2041,19 +2255,23 @@ class LedgerDetailView(View):
             'total_debit': total_debit,
             'total_credit': total_credit,
             'closing_balance': closing_balance,
-            'opening_balance': {'credit': opening_balance_credit, 'debit': opening_balance_debit},
+            'opening_balance': {
+                'credit': opening_balance_credit,
+                'debit': opening_balance_debit
+            },
             'from_date': from_date,
             'to_date': to_date,
             'openclose': option == 'openclose',
             'neg': neg,
-            'current_fiscal_year':current_fiscal_year,
+            'current_fiscal_year': current_fiscal_year,
             'first_credit_date': first_date,
             'last_credit_date': last_date,
-            'sorted_details':sorted_details
-    
+            'sorted_details': sorted_details
         }
         return render(request, self.template_name, context)
-    
+
+
+
 
 
 @api_view(['POST'])

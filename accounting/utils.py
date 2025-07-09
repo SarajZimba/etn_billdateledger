@@ -439,3 +439,47 @@ def soft_delete_journal_expense(journal_entry):
         print(f"An error occurred: {str(e)}")
 
     # return redirect('expense_list')
+
+from datetime import datetime, date, timedelta
+import pytz
+
+def change_date_to_datetime(date_str):
+    """
+    Converts a date string or date object to a timezone-aware datetime object with time set to 00:00:00,
+    adds 5 hours and 45 minutes to align with UTC, and returns the adjusted datetime.
+
+    Args:
+        date_str (str or datetime.date): The date string or date object to be converted.
+
+    Returns:
+        datetime.datetime: The corresponding adjusted timezone-aware datetime object.
+    """
+    print(f"date_str {date_str}")
+    if date_str is None:
+        return None
+
+    # Nepal timezone
+    nepal_tz = pytz.timezone("Asia/Kathmandu")
+
+    if isinstance(date_str, str):
+        # Assuming the date string is in 'YYYY-MM-DD' format; adjust as needed
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+    elif isinstance(date_str, date):
+        date_obj = date_str
+    else:
+        raise ValueError("Unsupported date format")
+    print(f"date_obj {date_obj}")
+
+    # Convert date to datetime with time set to 00:00:00
+    naive_datetime = datetime.combine(date_obj, datetime.min.time())
+    print(f"naive_datetime {naive_datetime}")
+
+    # Make it timezone-aware for Nepal timezone
+    nepal_datetime = nepal_tz.localize(naive_datetime)
+    print(f"nepal_datetime {nepal_datetime}")
+
+    # Add 5 hours and 45 minutes offset to align with UTC with our nepali time 
+    adjusted_datetime = nepal_datetime + timedelta(hours=5, minutes=45)
+    print(f"adjusted_datetime {adjusted_datetime}")
+
+    return adjusted_datetime

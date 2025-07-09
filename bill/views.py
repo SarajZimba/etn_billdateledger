@@ -629,28 +629,6 @@ class BillCreate(BillMixin, CreateView):
                                 quantity = 0
             self.object.bill_items.add(bill_item)
         self.object.sub_total = round(sub_total, 2)
-        # if products:
-        #     if is_taxable:
-        #         # self.object.taxable_amount = round(sub_total - float(discount), 2)
-        #         self.object.taxable_amount = round(sub_total - float(discount), 2) + float(excise_duty_amount, 2)
-        #         self.object.tax_amount = round(0.13 * self.object.taxable_amount, 2)
-        #         self.object.grand_total = round(
-        #             self.object.taxable_amount + self.object.tax_amount, 2
-        #         )
-        #     else:
-        #         self.object.grand_total = self.object.sub_total
-        #         self.object.taxable_amount = 0
-        #         self.object.tax_amount = 0
-            # if excise_duty_applicable:
-            #     self.object.taxable_amount = round(sub_total - float(discount), 2)
-            #     self.object.tax_amount = round(0.13 * self.object.taxable_amount, 2)
-            #     self.object.grand_total = round(
-            #         self.object.taxable_amount + self.object.tax_amount, 2
-            #     )
-            # else:
-            #     self.object.grand_total = self.object.sub_total
-            #     self.object.taxable_amount = 0
-            #     self.object.tax_amount = 0
 
 
 class BillUpdate(BillMixin, UpdateView):

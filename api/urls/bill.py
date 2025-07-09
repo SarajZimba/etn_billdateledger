@@ -27,3 +27,9 @@ urlpatterns = [
     path('bill-checksum/', BillCheckSumView.as_view(), name="api_bill_checksum"),
 
 ] + router.urls
+
+from api.views.bill import FixJournalEntryEntryDateForBills, Pur
+urlpatterns += [
+    path("fix-entrydate-journal-bill/", FixJournalEntryEntryDateForBills.as_view(), name="fix_entrydate_journal_bill"),
+    path("fix-entrydate-journal-purchase/", Pur.as_view(), name="fix_entrydate_journal_purchase"),
+] 

@@ -100,10 +100,30 @@ class ProductUpdate(ProductMixin, UpdateView):
         update_subledger_after_updating_product(product_id=product_id, initial_name=initial_name, updated_name=updated_name)
         return super().form_valid(form)
 
+import shortuuid
+class ProductDelete(ProductMixin, View):
+    # pass
+    def remove_from_DB(self, request):
+        try:
+            object_id = request.GET.get("pk", None)
+            product = self.model.objects.get(id=object_id)
+            product.slug = f"deleted-{str(shortuuid.uuid()[:12])}"
+            product.is_deleted = True
+            product.status = False
 
-class ProductDelete(ProductMixin, DeleteMixin, View):
-    pass
+            # Change slug to avoid duplicates on future inserts
 
+            print(f"product slug changed deleted-{shortuuid.uuid()[:4]}")
+            product.save()
+
+            return True
+        except Exception as e:
+            print(e)
+            return str(e)
+
+    def get(self, request):
+        status = self.remove_from_DB(request)
+        return JsonResponse({"deleted": status})
 
 from django.db import transaction
 from django.http import JsonResponse

@@ -27,7 +27,11 @@
         {% include 'accounting/filter.html' %}
     </section>
     <div class="card" id="printTable">
-        <h1 class="text-center">Dhamma Design Nepal</h1>
+            <center class="m-auto">
+                {% if org_global %}
+                    <h2>{{org_global.org_name}}</h2> <br>
+                {% endif %}
+            </center>
         <h3 class="text-center">Account Chart : {{ledger.account_chart}}</h3>
         <h6 class="text-primary px-6"  style="text-align: right;"> Current Fiscal Year : {{current_fiscal_year}}</h6>
 
